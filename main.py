@@ -24,7 +24,7 @@ def circles(img):
     gray = grayscaleimage(img)
 
     # detect circles in the image
-    circles = cv2.HoughCircles(gray, cv2.HOUGH_GRADIENT, 1.2, 100)
+    circles = cv2.HoughCircles(gray, cv2.HOUGH_GRADIENT, 1.505, 100, param1=200, param2=150)
 
     # ensure at least some circles were found
     if circles is not None:
