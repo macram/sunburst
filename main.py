@@ -20,11 +20,11 @@ def grayscaleimage(img):
 
 
 def circles(img):
-    output = img.copy
+    output = img.copy()
     gray = grayscaleimage(img)
 
     # detect circles in the image
-    circles = cv2.HoughCircles(gray, cv2.cv.CV_HOUGH_GRADIENT, 1.2, 100)
+    circles = cv2.HoughCircles(gray, cv2.HOUGH_GRADIENT, 1.2, 100)
 
     # ensure at least some circles were found
     if circles is not None:
@@ -39,7 +39,8 @@ def circles(img):
             cv2.rectangle(output, (x - 5, y - 5), (x + 5, y + 5), (0, 128, 255), -1)
 
         # show the output image
-        cv2.imshow("output", np.hstack([img, output]))
+        # cv2.imshow("output", np.hstack([gray, output]))
+        showimage(output)
         cv2.waitKey(0)
 
 
