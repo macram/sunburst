@@ -30,7 +30,6 @@ def circles(img):
     if circles is not None:
         # convert the (x, y) coordinates and radius of the circles to integers
         circles = np.round(circles[0, :]).astype("int")
-        print circles
 
         # loop over the (x, y) coordinates and radius of the circles
         for (x, y, r) in circles:
@@ -39,12 +38,13 @@ def circles(img):
             cv2.circle(output, (x, y), r, (0, 255, 0), 1)
             cv2.rectangle(output, (x - 1, y - 1), (x + 1, y + 1), (0, 128, 255), -1)
 
-        showimage(output)
+        showimage(cropimage(output, x, y, r))
 
 
 def cropimage(img, center_x, center_y, r):
-    crop_img = img[center_x + r, center_y + r]
+    crop_img = img[center_y - r - 30:center_y + r + 30, center_x - r - 30:center_x + r + 30]
     return crop_img
+
 
 ap = argparse.ArgumentParser()
 ap.add_argument("-i", "--image", required=True, help="Path to the image")
