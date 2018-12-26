@@ -4,6 +4,7 @@ import argparse
 
 
 def readimage(path):
+    print("Analyzing image at {path}".format(path=path))
     img = cv2.imread(path, cv2.IMREAD_COLOR)
     circles(img)
 
@@ -23,6 +24,7 @@ def circles(img):
     output = img.copy()
     gray = grayscaleimage(img)
 
+    print("Detecting circles")
     # detect circles in the image
     circles = cv2.HoughCircles(gray, cv2.HOUGH_GRADIENT, 1.505, 100, param1=200, param2=150)
 
@@ -35,14 +37,19 @@ def circles(img):
         for (x, y, r) in circles:
             # draw the circle in the output image, then draw a rectangle
             # corresponding to the center of the circle
+            print("Detected circle! Center: ({x},{y}), radius: {r}".format(x=x, y=y, r=r))
             cv2.circle(output, (x, y), r, (0, 255, 0), 1)
             cv2.rectangle(output, (x - 1, y - 1), (x + 1, y + 1), (0, 128, 255), -1)
 
-        showimage(exterior_circle(output, x, y, r))
+        showimage(crop_image(output, x, y, r))
 
 
 def crop_image(img, center_x, center_y, r):
-    crop_img = img[center_y - r - 30:center_y + r + 30, center_x - r - 30:center_x + r + 30]
+    new_center_y = center_y - r
+    new_center_x = center_x - r
+    print("Center of cropped circle: ({new_center_x},{new_center_y})".format(new_center_x=new_center_x,
+                                                                             new_center_y=new_center_y))
+    crop_img = img[new_center_y - 30:center_y + r + 30, new_center_x - 30:center_x + r + 30]
     return crop_img
 
 
@@ -53,7 +60,7 @@ def exterior_circle(img, center_x, center_y, r):
 
     cv2.circle(output, (center_x, center_y), exterior_r, (255, 0, 0), 1)
 
-    return crop_image(output, center_x, center_y, r)
+    return output
 
 
 ap = argparse.ArgumentParser()
