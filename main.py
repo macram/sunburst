@@ -38,13 +38,22 @@ def circles(img):
             cv2.circle(output, (x, y), r, (0, 255, 0), 1)
             cv2.rectangle(output, (x - 1, y - 1), (x + 1, y + 1), (0, 128, 255), -1)
 
-        showimage(cropimage(output, x, y, r))
+        showimage(exterior_circle(output, x, y, r))
 
 
-def cropimage(img, center_x, center_y, r):
+def crop_image(img, center_x, center_y, r):
     crop_img = img[center_y - r - 30:center_y + r + 30, center_x - r - 30:center_x + r + 30]
     return crop_img
 
+
+def exterior_circle(img, center_x, center_y, r):
+    exterior_r = r + 10  # Radio del circulo exterior
+    output = img.copy()
+    gray = grayscaleimage(img)
+
+    cv2.circle(output, (center_x, center_y), exterior_r, (255, 0, 0), 1)
+
+    return crop_image(output, center_x, center_y, r)
 
 ap = argparse.ArgumentParser()
 ap.add_argument("-i", "--image", required=True, help="Path to the image")
