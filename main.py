@@ -7,7 +7,11 @@ import os
 def readimage(path):
     print("Analyzing image at {path}".format(path=path))
     img = cv2.imread(path, cv2.IMREAD_COLOR)
-    circles(img)
+    meditions = circles(img)
+    if meditions > 0:
+        print(path + " has meditions!")
+    else:
+        print(path + " hasn't meditions!")
 
 
 def showimage(img):
@@ -25,7 +29,7 @@ def circles(img):
     output = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     gray = grayscaleimage(img)
 
-    print("Detecting circles")
+    # print("Detecting circles")
     # detect circles in the image
     circles = cv2.HoughCircles(gray, cv2.HOUGH_GRADIENT, 1.505, 100, param1=200, param2=150)
 
@@ -38,8 +42,8 @@ def circles(img):
         for (x, y, r) in circles:
             # draw the circle in the output image, then draw a rectangle
             # corresponding to the center of the circle
-            print("Detected circle! Center: ({x},{y}), radius: {r}".format(x=x, y=y, r=r))
-            # cv2.circle(output, (x, y), r, (0, 255, 0), 1)
+            # print("Detected circle! Center: ({c_x},{c_y}), radius: {c_r}".format(c_x=x, c_y=y, c_r=r))
+            cv2.circle(output, (x, y), r, (0, 255, 0), 1)
             # cv2.rectangle(output, (x - 1, y - 1), (x + 1, y + 1), (0, 128, 255), -1)
 
         cropped_img, center_x, center_y, r = crop_image(output, x, y, r)
@@ -47,7 +51,9 @@ def circles(img):
         red_ink = get_red_ink(cropped_img)
         masked_mask = cv2.bitwise_and(exterior_circle, red_ink)
         if np.count_nonzero(masked_mask) > 0:
-            print("We have meditions here!")
+            return 1
+        else:
+            return 0
 
 
 def crop_image(img, center_x, center_y, r):
@@ -56,8 +62,8 @@ def crop_image(img, center_x, center_y, r):
 
     new_center_y = height / 2
     new_center_x = width / 2
-    print("Center of cropped circle: ({new_center_x},{new_center_y})".format(new_center_x=new_center_x,
-                                                                             new_center_y=new_center_y))
+    # print("Center of cropped circle: ({new_center_x},{new_center_y})".format(new_center_x=new_center_x,
+    #                                                                         new_center_y=new_center_y))
     return crop_img, new_center_x, new_center_y, r
 
 
@@ -87,7 +93,7 @@ def get_red_ink(img):
     upper_red = np.array([180, 255, 255])
     mask1 = cv2.inRange(input, lower_red, upper_red)
 
-    # join my masks
+    # Unir ambas mascaras
     mask = mask0 + mask1
 
     # set my output img to zero everywhere except my mask
