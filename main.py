@@ -45,18 +45,20 @@ def circles(img):
 
 
 def crop_image(img, center_x, center_y, r):
-    new_center_y = center_y - r
-    new_center_x = center_x - r
+    crop_img = img[center_y - r - 30:center_y + r + 30, center_x - r - 30:center_x + r + 30]  # type: mat
+    height, width, channels = crop_img.shape
+
+    new_center_y = height / 2
+    new_center_x = width / 2
     print("Center of cropped circle: ({new_center_x},{new_center_y})".format(new_center_x=new_center_x,
                                                                              new_center_y=new_center_y))
-    crop_img = img[new_center_y - 30:center_y + r + 30, new_center_x - 30:center_x + r + 30]
-    return crop_img
+
+    return exterior_circle(crop_img, new_center_x, new_center_y, r)
 
 
 def exterior_circle(img, center_x, center_y, r):
     exterior_r = r + 10  # Radio del circulo exterior
     output = img.copy()
-    gray = grayscaleimage(img)
 
     cv2.circle(output, (center_x, center_y), exterior_r, (255, 0, 0), 1)
 
