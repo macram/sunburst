@@ -1,6 +1,7 @@
 import numpy as np
 import cv2
 import argparse
+import os
 
 
 def readimage(path):
@@ -97,7 +98,15 @@ def get_red_ink(img):
     return output
 
 
+def processPath(path):
+    if os.path.isfile(path) is True:
+        readimage(path)
+    if os.path.isdir(path) is True:
+        file_list = os.listdir(path)
+        for file_name in file_list:
+            processPath(path + "/" + file_name)
+
 ap = argparse.ArgumentParser()
 ap.add_argument("-i", "--image", required=True, help="Path to the image")
 args = vars(ap.parse_args())
-readimage(args["image"])
+processPath(args["image"])
