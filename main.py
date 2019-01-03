@@ -118,9 +118,7 @@ def get_red_ink(img):
 
 def processPath(path):
     if os.path.isfile(path) is True:
-        if "_modified.jpg" in path:
-            os.remove(path)
-        else:
+        if "_modified.jpg" not in path:
             readimage(path)
     if os.path.isdir(path) is True:
         file_list = os.listdir(path)
