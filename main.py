@@ -78,16 +78,16 @@ def crop_image(img, center_x, center_y, r):
 
 def get_exterior_circle(img, center_x, center_y, r):
     exterior_r = r + 10  # Radio del circulo exterior
-    output = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+    output = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)  # type: mat
 
     cv2.circle(output, (center_x, center_y), exterior_r, (90, 127, 127), 1)
 
     blue = np.array([90, 127, 127])
     blue2 = np.array([91, 127, 127])
-    maskblue = cv2.inRange(output, blue, blue2)
+    bluemask = cv2.inRange(output, blue, blue2)  # type: mat
 
     output = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
-    output[np.where(maskblue == 0)] = 0
+    output[np.where(bluemask == 0)] = 0
 
     return output
 
@@ -118,7 +118,10 @@ def get_red_ink(img):
 
 def processPath(path):
     if os.path.isfile(path) is True:
-        readimage(path)
+        if "_modified.jpg" in path:
+            os.remove(path)
+        else:
+            readimage(path)
     if os.path.isdir(path) is True:
         file_list = os.listdir(path)
         for file_name in file_list:
