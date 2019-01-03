@@ -11,7 +11,13 @@ def readimage(path):
     if meditions > 0:
         print(path + " has meditions!")
     else:
-        print(path + " hasn't meditions!")
+        if meditions == 0:
+            print(path + " hasn't meditions!")
+        else:
+            if meditions == -1:
+                print("Please review " + path + ", it looks like we see more than one circle.")
+            if meditions == -2:
+                print("Please review " + path + ", it looks like we don't see a circle.")
 
 
 def showimage(img, title="Imagen"):
@@ -35,7 +41,7 @@ def circles(img, path=""):
 
     # print("Detecting circles")
     # detect circles in the image
-    circles = cv2.HoughCircles(gray, cv2.HOUGH_GRADIENT, 1.505, 100, param1=200, param2=150)
+    circles = cv2.HoughCircles(gray, cv2.HOUGH_GRADIENT, 1.505, 100, param1=400, param2=150)
 
     # ensure at least some circles were found
     if circles is not None:
@@ -51,18 +57,24 @@ def circles(img, path=""):
             # cv2.rectangle(output, (x - 1, y - 1), (x + 1, y + 1), (0, 128, 255), -1)
 
         cropped_img, center_x, center_y, r = crop_image(output, x, y, r)
-        exterior_circle = get_exterior_circle(cropped_img, center_x, center_y, r)
-        red_ink = get_red_ink(cropped_img)
-        masked_mask = cv2.bitwise_and(exterior_circle, red_ink)
-        # showimage(cropped_img, path)
-        saveimage(exterior_circle, path, "_exteriorcircle")
-        saveimage(red_ink, path, "_redink")
-        saveimage(masked_mask, path, "_maskedmask")
-        saveimage(cropped_img, path)
-        if np.count_nonzero(masked_mask) > 0:
-            return 1
+        saveimage(cropped_img, path, "_detectedcircle")
+
+        if circles.size == 3:
+            exterior_circle = get_exterior_circle(cropped_img, center_x, center_y, r)
+            red_ink = get_red_ink(cropped_img)
+            masked_mask = cv2.bitwise_and(exterior_circle, red_ink)
+            # showimage(cropped_img, path)
+            saveimage(exterior_circle, path, "_exteriorcircle")
+            saveimage(red_ink, path, "_redink")
+            saveimage(masked_mask, path, "_maskedmask")
+            if np.count_nonzero(masked_mask) > 0:
+                return 1
+            else:
+                return 0
         else:
-            return 0
+            return -1
+    else:
+        return -2
 
 
 def crop_image(img, center_x, center_y, r):
