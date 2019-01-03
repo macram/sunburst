@@ -5,19 +5,23 @@ import os
 
 
 def readimage(path):
-    print("Analyzing image at {path}".format(path=path))
+    # print("Analyzing image at {path}".format(path=path))
     img = cv2.imread(path, cv2.IMREAD_COLOR)
-    meditions = circles(img)
+    meditions = circles(img, path)
     if meditions > 0:
         print(path + " has meditions!")
     else:
         print(path + " hasn't meditions!")
 
 
-def showimage(img):
-    cv2.imshow("Imagen", img)
+def showimage(img, title="Imagen"):
+    cv2.imshow(title, img)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
+
+
+def saveimage(img, path, suffix=""):
+    cv2.imwrite(path + suffix + "_modified.jpg", img)
 
 
 def grayscaleimage(img):
@@ -25,8 +29,8 @@ def grayscaleimage(img):
     return gray
 
 
-def circles(img):
-    output = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+def circles(img, path=""):
+    output = img.copy()
     gray = grayscaleimage(img)
 
     # print("Detecting circles")
@@ -50,6 +54,11 @@ def circles(img):
         exterior_circle = get_exterior_circle(cropped_img, center_x, center_y, r)
         red_ink = get_red_ink(cropped_img)
         masked_mask = cv2.bitwise_and(exterior_circle, red_ink)
+        # showimage(cropped_img, path)
+        saveimage(exterior_circle, path, "_exterior")
+        saveimage(red_ink, path, "_redink")
+        saveimage(masked_mask, path, "_masked")
+        saveimage(cropped_img, path)
         if np.count_nonzero(masked_mask) > 0:
             return 1
         else:
@@ -69,7 +78,7 @@ def crop_image(img, center_x, center_y, r):
 
 def get_exterior_circle(img, center_x, center_y, r):
     exterior_r = r + 10  # Radio del circulo exterior
-    output = img.copy()
+    output = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
     cv2.circle(output, (center_x, center_y), exterior_r, (0, 0, 255), 1)
 
@@ -81,7 +90,7 @@ def get_exterior_circle(img, center_x, center_y, r):
 
 
 def get_red_ink(img):
-    input = cv2.cvtColor(img, cv2.COLOR_RGB2HSV)
+    input = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
 
     # El rojo en HSV tiene un valor H en los limites: con H valiendo tanto 0 como 180 son rojo "puro". Pillamos
     # dos mascaras precisamente para tomar ambos tipos de rojo: mas "naranja" y mas "violeta".
