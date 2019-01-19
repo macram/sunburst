@@ -53,7 +53,7 @@ def circles(img, path=""):
             # draw the circle in the output image, then draw a rectangle
             # corresponding to the center of the circle
             # print("Detected circle! Center: ({c_x},{c_y}), radius: {c_r}".format(c_x=x, c_y=y, c_r=r))
-            cv2.circle(output, (x, y), r, (0, 255, 0), 1)
+            cv2.circle(output, (x, y), r, (0, 255, 255), 1)
             # cv2.rectangle(output, (x - 1, y - 1), (x + 1, y + 1), (0, 128, 255), -1)
 
         cropped_img, center_x, center_y, r = crop_image(output, x, y, r)
@@ -67,6 +67,7 @@ def circles(img, path=""):
             saveimage(exterior_circle, path, "_exteriorcircle")
             saveimage(red_ink, path, "_redink")
             saveimage(masked_mask, path, "_maskedmask")
+            identifyGroups(red_ink)
             if np.count_nonzero(masked_mask) > 0:
                 return 1
             else:
@@ -109,11 +110,11 @@ def get_red_ink(img):
 
     # El rojo en HSV tiene un valor H en los limites: con H valiendo tanto 0 como 180 son rojo "puro". Pillamos
     # dos mascaras precisamente para tomar ambos tipos de rojo: mas "naranja" y mas "violeta".
-    lower_red = np.array([0, 30, 30])
+    lower_red = np.array([0, 130, 130])
     upper_red = np.array([20, 255, 255])
     mask0 = cv2.inRange(input, lower_red, upper_red)
 
-    lower_red = np.array([160, 30, 30])
+    lower_red = np.array([160, 130, 130])
     upper_red = np.array([180, 255, 255])
     mask1 = cv2.inRange(input, lower_red, upper_red)
 
@@ -128,6 +129,19 @@ def get_red_ink(img):
     return output
 
 
+def identifyGroups(img):
+    image, contours, hierarchy = cv2.findContours(img, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+    for cnt in contours:
+        if 5 < cv2.contourArea(cnt):
+            rect = cv2.minAreaRect(cnt)
+            box = cv2.boxPoints(rect)
+            box = np.int0(box)
+            cv2.drawContours(img, [box], 0, 127, 2)
+            print(cv2.boundingRect(cnt))
+
+    showimage(img, "With contours")
+
+
 def processPath(path):
     if os.path.isfile(path) is True:
         if "_modified.jpg" not in path:
@@ -139,6 +153,6 @@ def processPath(path):
 
 
 ap = argparse.ArgumentParser()
-ap.add_argument("-i", "--image", required=True, help="Path to the image")
+ap.add_argument("-i", "--image", required=True, help="Path to the image or the folder containing images")
 args = vars(ap.parse_args())
 processPath(args["image"])
