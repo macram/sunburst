@@ -1,6 +1,7 @@
 # This Python file uses the following encoding: utf-8
 
 import numpy as np
+import math
 import cv2
 import argparse
 import os
@@ -38,6 +39,24 @@ def grayscale_image(img):
     return gray
 
 
+def process_groups_array(groups_array, center_x, center_y):
+    for element in groups_array:
+        rect_center = element[0]
+        r, theta = get_polar_from_cartesian(rect_center[0], rect_center[1], center_x, center_y)
+        print theta
+
+
+def get_polar_from_cartesian(point_x, point_y, center_x, center_y):
+    x = point_x - center_x
+    y = point_y - center_y
+    r = math.sqrt(x * x + y * y)
+
+    theta = (math.atan(y / x))  # Radians
+    theta_deg = math.degrees(theta)
+
+    return r, theta_deg
+
+
 def circles(img, path=""):
     if isinstance(img, (np.ndarray, np.generic)):
 
@@ -72,7 +91,8 @@ def circles(img, path=""):
                 save_image(exterior_circle, path, "_exteriorcircle")
                 save_image(red_ink, path, "_redink")
                 save_image(masked_mask, path, "_maskedmask")
-                with_groups = identify_groups(red_ink)
+                with_groups, groups_array = identify_groups(red_ink)
+                process_groups_array(groups_array, center_x, center_y)
                 save_image(with_groups, path, "_withgroups")
                 if np.count_nonzero(masked_mask) > 0:
                     return 1
@@ -142,6 +162,8 @@ def identify_groups(img):
 
     closed_image = cv2.morphologyEx(img, cv2.MORPH_CLOSE, kernel)
 
+    boxes = []
+
     image, contours, hierarchy = cv2.findContours(closed_image, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
     for cnt in contours:
         if 5 < cv2.contourArea(cnt):
@@ -149,10 +171,11 @@ def identify_groups(img):
             box = cv2.boxPoints(rect)
             box = np.int0(box)
             cv2.drawContours(img, [box], 0, 127, 2)
+            boxes.append(rect)
             print(cv2.boundingRect(cnt))
 
     show_image(img, "With contours")
-    return img
+    return img, boxes
 
 
 def processPath(path):
