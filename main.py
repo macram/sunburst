@@ -39,47 +39,51 @@ def grayscale_image(img):
 
 
 def circles(img, path=""):
-    output = img.copy()
-    gray = grayscale_image(img)
+    if type(img) == "numpy.ndarray":
 
-    # print("Detecting circles")
-    # detect circles in the image
-    circles = cv2.HoughCircles(gray, cv2.HOUGH_GRADIENT, 1.505, 100, param1=400, param2=150)
+        output = img.copy()
+        gray = grayscale_image(img)
 
-    # ensure at least some circles were found
-    if circles is not None:
-        # convert the (x, y) coordinates and radius of the circles to integers
-        intcircles = np.round(circles[0, :]).astype("int")
+        # print("Detecting circles")
+        # detect circles in the image
+        circles = cv2.HoughCircles(gray, cv2.HOUGH_GRADIENT, 1.505, 100, param1=400, param2=150)
 
-        # loop over the (x, y) coordinates and radius of the circles
-        for (x, y, r) in intcircles:
-            # draw the circle in the output image, then draw a rectangle
-            # corresponding to the center of the circle
-            # print("Detected circle! Center: ({c_x},{c_y}), radius: {c_r}".format(c_x=x, c_y=y, c_r=r))
-            cv2.circle(output, (x, y), r, (0, 255, 255), 1)
-            # cv2.rectangle(output, (x - 1, y - 1), (x + 1, y + 1), (0, 128, 255), -1)
+        # ensure at least some circles were found
+        if circles is not None:
+            # convert the (x, y) coordinates and radius of the circles to integers
+            intcircles = np.round(circles[0, :]).astype("int")
 
-        cropped_img, center_x, center_y, r = crop_image(output, x, y, r)
-        save_image(cropped_img, path, "_detectedcircle")
+            # loop over the (x, y) coordinates and radius of the circles
+            for (x, y, r) in intcircles:
+                # draw the circle in the output image, then draw a rectangle
+                # corresponding to the center of the circle
+                # print("Detected circle! Center: ({c_x},{c_y}), radius: {c_r}".format(c_x=x, c_y=y, c_r=r))
+                cv2.circle(output, (x, y), r, (0, 255, 255), 1)
+                # cv2.rectangle(output, (x - 1, y - 1), (x + 1, y + 1), (0, 128, 255), -1)
 
-        if intcircles.size == 3:
-            exterior_circle = get_exterior_circle(cropped_img, center_x, center_y, r)
-            red_ink = get_red_ink(cropped_img)
-            masked_mask = cv2.bitwise_and(exterior_circle, red_ink)
-            # showimage(cropped_img, path)
-            save_image(exterior_circle, path, "_exteriorcircle")
-            save_image(red_ink, path, "_redink")
-            save_image(masked_mask, path, "_maskedmask")
-            with_groups = identify_groups(red_ink)
-            save_image(with_groups, path, "_withgroups")
-            if np.count_nonzero(masked_mask) > 0:
-                return 1
+            cropped_img, center_x, center_y, r = crop_image(output, x, y, r)
+            save_image(cropped_img, path, "_detectedcircle")
+
+            if intcircles.size == 3:
+                exterior_circle = get_exterior_circle(cropped_img, center_x, center_y, r)
+                red_ink = get_red_ink(cropped_img)
+                masked_mask = cv2.bitwise_and(exterior_circle, red_ink)
+                # showimage(cropped_img, path)
+                save_image(exterior_circle, path, "_exteriorcircle")
+                save_image(red_ink, path, "_redink")
+                save_image(masked_mask, path, "_maskedmask")
+                with_groups = identify_groups(red_ink)
+                save_image(with_groups, path, "_withgroups")
+                if np.count_nonzero(masked_mask) > 0:
+                    return 1
+                else:
+                    return 0
             else:
-                return 0
+                return -1
         else:
-            return -1
+            return -2
     else:
-        return -2
+        return -3
 
 
 def crop_image(img, center_x, center_y, r):
