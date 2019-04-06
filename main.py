@@ -1,3 +1,5 @@
+# This Python file uses the following encoding: utf-8
+
 import numpy as np
 import cv2
 import argparse
@@ -123,7 +125,7 @@ def get_red_ink(img):
     # Unir ambas mascaras
     mask = mask0 + mask1
 
-    # set my output img to zero everywhere except my mask
+    # La imagen de salida será cero en todos los píxeles excepto en los que formen parte de la máscara
     output = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
     output[np.where(mask == 0)] = 0
     output[np.where(mask != 0)] = 255
