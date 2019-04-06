@@ -20,24 +20,25 @@ def readimage(path):
                 print("Please review " + path + ", it looks like we don't see a circle.")
 
 
-def showimage(img, title="Imagen"):
-    cv2.imshow(title, img)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
+def show_image(img, title="Imagen"):
+    return
+    # cv2.imshow(title, img)
+    # cv2.waitKey(0)
+    # cv2.destroyAllWindows()
 
 
-def saveimage(img, path, suffix=""):
+def save_image(img, path, suffix=""):
     cv2.imwrite(path + suffix + "_modified.jpg", img)
 
 
-def grayscaleimage(img):
+def grayscale_image(img):
     gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
     return gray
 
 
 def circles(img, path=""):
     output = img.copy()
-    gray = grayscaleimage(img)
+    gray = grayscale_image(img)
 
     # print("Detecting circles")
     # detect circles in the image
@@ -46,10 +47,10 @@ def circles(img, path=""):
     # ensure at least some circles were found
     if circles is not None:
         # convert the (x, y) coordinates and radius of the circles to integers
-        circles = np.round(circles[0, :]).astype("int")
+        intcircles = np.round(circles[0, :]).astype("int")
 
         # loop over the (x, y) coordinates and radius of the circles
-        for (x, y, r) in circles:
+        for (x, y, r) in intcircles:
             # draw the circle in the output image, then draw a rectangle
             # corresponding to the center of the circle
             # print("Detected circle! Center: ({c_x},{c_y}), radius: {c_r}".format(c_x=x, c_y=y, c_r=r))
@@ -57,17 +58,18 @@ def circles(img, path=""):
             # cv2.rectangle(output, (x - 1, y - 1), (x + 1, y + 1), (0, 128, 255), -1)
 
         cropped_img, center_x, center_y, r = crop_image(output, x, y, r)
-        saveimage(cropped_img, path, "_detectedcircle")
+        save_image(cropped_img, path, "_detectedcircle")
 
-        if circles.size == 3:
+        if intcircles.size == 3:
             exterior_circle = get_exterior_circle(cropped_img, center_x, center_y, r)
             red_ink = get_red_ink(cropped_img)
             masked_mask = cv2.bitwise_and(exterior_circle, red_ink)
             # showimage(cropped_img, path)
-            saveimage(exterior_circle, path, "_exteriorcircle")
-            saveimage(red_ink, path, "_redink")
-            saveimage(masked_mask, path, "_maskedmask")
-            identifyGroups(red_ink)
+            save_image(exterior_circle, path, "_exteriorcircle")
+            save_image(red_ink, path, "_redink")
+            save_image(masked_mask, path, "_maskedmask")
+            with_groups = identify_groups(red_ink)
+            save_image(with_groups, path, "_withgroups")
             if np.count_nonzero(masked_mask) > 0:
                 return 1
             else:
@@ -129,8 +131,12 @@ def get_red_ink(img):
     return output
 
 
-def identifyGroups(img):
-    image, contours, hierarchy = cv2.findContours(img, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+def identify_groups(img):
+    kernel = np.ones((10, 10), np.uint8)
+
+    closed_image = cv2.morphologyEx(img, cv2.MORPH_CLOSE, kernel)
+
+    image, contours, hierarchy = cv2.findContours(closed_image, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
     for cnt in contours:
         if 5 < cv2.contourArea(cnt):
             rect = cv2.minAreaRect(cnt)
@@ -139,7 +145,8 @@ def identifyGroups(img):
             cv2.drawContours(img, [box], 0, 127, 2)
             print(cv2.boundingRect(cnt))
 
-    showimage(img, "With contours")
+    show_image(img, "With contours")
+    return img
 
 
 def processPath(path):
