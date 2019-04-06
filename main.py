@@ -39,7 +39,7 @@ def grayscale_image(img):
 
 
 def circles(img, path=""):
-    if type(img) == "numpy.ndarray":
+    if isinstance(img, (np.ndarray, np.generic)):
 
         output = img.copy()
         gray = grayscale_image(img)
