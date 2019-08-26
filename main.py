@@ -6,7 +6,6 @@ import cv2
 import argparse
 import os
 
-
 def readimage(path):
     # print("Analyzing image at {path}".format(path=path))
     img = cv2.imread(path, cv2.IMREAD_COLOR)
@@ -43,7 +42,7 @@ def process_groups_array(groups_array, center_x, center_y):
     for element in groups_array:
         rect_center = element[0]
         r, theta = get_polar_from_cartesian(rect_center[0], rect_center[1], center_x, center_y)
-        print theta
+        print(theta)
 
 
 def get_polar_from_cartesian(point_x, point_y, center_x, center_y):
@@ -81,10 +80,12 @@ def circles(img, path=""):
                 # cv2.rectangle(output, (x - 1, y - 1), (x + 1, y + 1), (0, 128, 255), -1)
 
             cropped_img, center_x, center_y, r = crop_image(output, x, y, r)
+            int_center_x = int(center_x)
+            int_center_y = int(center_y)
             save_image(cropped_img, path, "_detectedcircle")
 
             if intcircles.size == 3:
-                exterior_circle = get_exterior_circle(cropped_img, center_x, center_y, r)
+                exterior_circle = get_exterior_circle(cropped_img, int_center_x, int_center_y, r)
                 red_ink = get_red_ink(cropped_img)
                 masked_mask = cv2.bitwise_and(exterior_circle, red_ink)
                 # showimage(cropped_img, path)
@@ -164,7 +165,7 @@ def identify_groups(img):
 
     boxes = []
 
-    image, contours, hierarchy = cv2.findContours(closed_image, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+    contours, hierarchy = cv2.findContours(closed_image, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
     for cnt in contours:
         if 5 < cv2.contourArea(cnt):
             rect = cv2.minAreaRect(cnt)
