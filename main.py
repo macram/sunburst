@@ -39,19 +39,22 @@ def grayscale_image(img):
 
 
 def process_groups_array(groups_array, center_x, center_y):
+    i = 0
     for element in groups_array:
+        print("Element " + i.__str__())
         rect_center = element[0]
         r, theta = get_polar_from_cartesian(rect_center[0], rect_center[1], center_x, center_y)
         print(theta)
 
+        i += 1
 
 def get_polar_from_cartesian(point_x, point_y, center_x, center_y):
-    x = point_x - center_x
-    y = point_y - center_y
-    r = math.sqrt(x * x + y * y)
+    x = point_x - center_x # Valores menores que 0 <- Mitad izquierda de la imagen
+    y = point_y - center_y # Valores menores que 0 <- Mitad superior de la imagen
 
-    theta = (math.atan(y / x))  # Radians
-    theta_deg = math.degrees(theta)
+    r = np.sqrt(x**2 + y**2)
+    theta = (np.arctan2(x, y))  # Radians
+    theta_deg = (math.degrees(theta) + 270) % 360
 
     return r, theta_deg
 
