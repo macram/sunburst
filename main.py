@@ -6,6 +6,7 @@ import cv2
 import argparse
 import os
 
+
 def readimage(path):
     # print("Analyzing image at {path}".format(path=path))
     img = cv2.imread(path, cv2.IMREAD_COLOR)
@@ -48,11 +49,12 @@ def process_groups_array(groups_array, center_x, center_y):
 
         i += 1
 
-def get_polar_from_cartesian(point_x, point_y, center_x, center_y):
-    x = point_x - center_x # Valores menores que 0 <- Mitad izquierda de la imagen
-    y = point_y - center_y # Valores menores que 0 <- Mitad superior de la imagen
 
-    r = np.sqrt(x**2 + y**2)
+def get_polar_from_cartesian(point_x, point_y, center_x, center_y):
+    x = point_x - center_x  # Valores menores que 0 <- Mitad izquierda de la imagen
+    y = point_y - center_y  # Valores menores que 0 <- Mitad superior de la imagen
+
+    r = np.sqrt(x ** 2 + y ** 2)
     theta = (np.arctan2(x, y))  # Radians
     theta_deg = (math.degrees(theta) + 270) % 360
 
