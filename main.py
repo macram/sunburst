@@ -90,17 +90,29 @@ def circles(img, path=""):
             save_image(cropped_img, path, "_detectedcircle")
 
             if intcircles.size == 3:
+                # First operations
+                # Exterior circle, to get meditions a few pixels around the detected circle
                 exterior_circle = get_exterior_circle(cropped_img, int_center_x, int_center_y, r)
+                # Margin circles, used to discard meditions that are not immediately around the circle.
                 margin_circle = get_error_margin_circle(cropped_img, int_center_x, int_center_y, r)
+                # Red ink: color-wise masking
                 red_ink = get_red_ink(cropped_img)
+                # And now we just mask the exterior_circle image and the red_ink one, to know if that image has
+                #     meditions.
                 masked_mask = cv2.bitwise_and(exterior_circle, red_ink)
                 # showimage(cropped_img, path)
+
+                # Saving the intermediate images to be inspected later.
                 save_image(exterior_circle, path, "_exteriorcircle")
                 save_image(margin_circle, path, "_margincircle")
                 save_image(red_ink, path, "_redink")
                 save_image(masked_mask, path, "_maskedmask")
+
+                # Doing the actual annotation group detection
                 with_groups, groups_array = identify_groups(red_ink)
                 process_groups_array(groups_array, center_x, center_y)
+
+                # Saving the image with the detected groups
                 save_image(with_groups, path, "_withgroups")
                 if np.count_nonzero(masked_mask) > 0:
                     return 1
@@ -130,7 +142,8 @@ def crop_image(img, center_x, center_y, r):
 
 
 def get_exterior_circle(img, center_x, center_y, r):
-    exterior_r = r + 10  # Radio del circulo exterior
+    exterior_r = r + 10  # Exterior circle, to detect meditions /this should be adjusted later.
+                         # This is NOT the circle being drawn: this is only used to detect meditions.
     output = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)  # type: mat
 
     cv2.circle(output, (center_x, center_y), exterior_r, (90, 127, 127), 1)
@@ -147,6 +160,8 @@ def get_exterior_circle(img, center_x, center_y, r):
 
 def get_error_margin_circle(img, center_x, center_y, r):
     # We're going for 10 pixels outside and inside the detected circle.
+    # It's needed to add a _inside_ circle because sometimes there are some difference between the
+    #     detected circle and the "actual" one, this way we try not to lose any meditions.
     first_radium = r+10
     second_radium = r-10
 
