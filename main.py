@@ -81,7 +81,7 @@ def circles(img, path=""):
                 # draw the circle in the output image, then draw a rectangle
                 # corresponding to the center of the circle
                 # print("Detected circle! Center: ({c_x},{c_y}), radius: {c_r}".format(c_x=x, c_y=y, c_r=r))
-                cv2.circle(output, (x, y), r, (0, 255, 255), 1)
+                mark_detected_circle(output, r, x, y)
                 # cv2.rectangle(output, (x - 1, y - 1), (x + 1, y + 1), (0, 128, 255), -1)
 
             cropped_img, center_x, center_y, r = crop_image(output, x, y, r)
@@ -91,10 +91,12 @@ def circles(img, path=""):
 
             if intcircles.size == 3:
                 exterior_circle = get_exterior_circle(cropped_img, int_center_x, int_center_y, r)
+                margin_circle = get_error_margin_circle(cropped_img, int_center_x, int_center_y, r)
                 red_ink = get_red_ink(cropped_img)
                 masked_mask = cv2.bitwise_and(exterior_circle, red_ink)
                 # showimage(cropped_img, path)
                 save_image(exterior_circle, path, "_exteriorcircle")
+                save_image(margin_circle, path, "_margincircle")
                 save_image(red_ink, path, "_redink")
                 save_image(masked_mask, path, "_maskedmask")
                 with_groups, groups_array = identify_groups(red_ink)
@@ -110,6 +112,10 @@ def circles(img, path=""):
             return -2
     else:
         return -3
+
+
+def mark_detected_circle(output, r, x, y):
+    cv2.circle(output, (x, y), r, (0, 255, 255), 1)
 
 
 def crop_image(img, center_x, center_y, r):
@@ -137,6 +143,20 @@ def get_exterior_circle(img, center_x, center_y, r):
     output[np.where(bluemask == 0)] = 0
 
     return output
+
+
+def get_error_margin_circle(img, center_x, center_y, r):
+    # We're going for 10 pixels outside and inside the detected circle.
+    first_radium = r+10
+    second_radium = r-10
+
+    first_circle = get_exterior_circle(img, center_x, center_y, first_radium)
+    second_circle = get_exterior_circle(img, center_x, center_y, second_radium)
+
+    output_image = first_circle + second_circle
+
+    return output_image
+
 
 
 def get_red_ink(img):
