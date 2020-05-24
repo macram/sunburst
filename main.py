@@ -207,7 +207,7 @@ def identify_groups(img):
 
     contours, hierarchy = cv2.findContours(closed_image, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
     for cnt in contours:
-        if 5 < cv2.contourArea(cnt):
+        if 5 < cv2.contourArea(cnt): # So we discard rectangles with less than five pixels of area. This reduces noise.
             rect = cv2.minAreaRect(cnt)
             box = cv2.boxPoints(rect)
             box = np.int0(box)
