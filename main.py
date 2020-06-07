@@ -141,12 +141,12 @@ def crop_image(img, center_x, center_y, r):
     return crop_img, new_center_x, new_center_y, r
 
 
-def get_exterior_circle(img, center_x, center_y, r):
+def get_exterior_circle(img, center_x, center_y, r, width = 1):
     exterior_r = r + 10  # Exterior circle, to detect meditions /this should be adjusted later.
                          # This is NOT the circle being drawn: this is only used to detect meditions.
     output = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)  # type: mat
 
-    cv2.circle(output, (center_x, center_y), exterior_r, (90, 127, 127), 1)
+    cv2.circle(output, (center_x, center_y), exterior_r, (90, 127, 127), width)
 
     blue = np.array([90, 127, 127])
     blue2 = np.array([91, 127, 127])
@@ -162,13 +162,8 @@ def get_error_margin_circle(img, center_x, center_y, r):
     # We're going for 10 pixels outside and inside the detected circle.
     # It's needed to add a _inside_ circle because sometimes there are some difference between the
     #     detected circle and the "actual" one, this way we try not to lose any meditions.
-    first_radium = r+10
-    second_radium = r-10
 
-    first_circle = get_exterior_circle(img, center_x, center_y, first_radium)
-    second_circle = get_exterior_circle(img, center_x, center_y, second_radium)
-
-    output_image = first_circle + second_circle
+    output_image = get_exterior_circle(img, center_x, center_y, r, 20)
 
     return output_image
 
@@ -207,7 +202,7 @@ def identify_groups(img):
 
     contours, hierarchy = cv2.findContours(closed_image, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
     for cnt in contours:
-        if 5 < cv2.contourArea(cnt): # So we discard rectangles with less than five pixels of area. This reduces noise.
+        if 5 < cv2.contourArea(cnt):  # So we discard rectangles with less than five pixels of area. This reduces noise.
             rect = cv2.minAreaRect(cnt)
             box = cv2.boxPoints(rect)
             box = np.int0(box)
