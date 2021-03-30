@@ -55,8 +55,8 @@ def process_groups_array(groups_array, center_x, center_y):
 
 
 def get_polar_from_cartesian(point_x, point_y, center_x, center_y):
-    x = point_x - center_x  # Valores menores que 0 <- Mitad izquierda de la imagen
-    y = point_y - center_y  # Valores menores que 0 <- Mitad superior de la imagen
+    x = point_x - center_x  # Less than 0 <- Left hemisphere
+    y = point_y - center_y  # Less than que 0 <- Upper hemisphere
 
     r = np.sqrt(x ** 2 + y ** 2)
     theta = (np.arctan2(x, y))  # Radians
@@ -82,8 +82,6 @@ def circles(img, path=""):
 
             # loop over the (x, y) coordinates and radius of the circles
             for (x, y, r) in intcircles:
-                # draw the circle in the output image, then draw a rectangle
-                # corresponding to the center of the circle
                 # print("Detected circle! Center: ({c_x},{c_y}), radius: {c_r}".format(c_x=x, c_y=y, c_r=r))
                 mark_detected_circle(output, r, x, y)
                 # cv2.rectangle(output, (x - 1, y - 1), (x + 1, y + 1), (0, 128, 255), -1)
@@ -95,12 +93,12 @@ def circles(img, path=""):
 
             if intcircles.size == 3:
                 # First operations
-                # Margin circles, used to discard meditions that are not immediately around the circle.
+                # Margin circles, used to discard measurements that are not immediately around the circle.
                 margin_circle = get_error_margin_circle(cropped_img, int_center_x, int_center_y, r)
                 # Red ink: color-wise masking
                 red_ink = get_red_ink(cropped_img)
                 # And now we just mask the exterior_circle image and the red_ink one, to know if that image has
-                #     meditions.
+                #     measurements.
                 masked_mask = cv2.bitwise_and(margin_circle, red_ink)
                 # showimage(cropped_img, path)
 
@@ -143,8 +141,8 @@ def crop_image(img, center_x, center_y, r):
 
 
 def get_exterior_circle(img, center_x, center_y, r, width=1):
-    exterior_r = r + 10  # Exterior circle, to detect meditions /this should be adjusted later.
-    # This is NOT the circle being drawn: this is only used to detect meditions.
+    exterior_r = r + 10  # Exterior circle, to detect measurements /this should be adjusted later.
+    # This is NOT the circle being drawn: this is only used to detect measurements.
     output = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)  # type: mat
 
     cv2.circle(output, (center_x, center_y), exterior_r, (90, 127, 127), width)
@@ -162,7 +160,7 @@ def get_exterior_circle(img, center_x, center_y, r, width=1):
 def get_error_margin_circle(img, center_x, center_y, r):
     # We're going for 10 pixels outside and inside the detected circle.
     # It's needed to add a _inside_ circle because sometimes there are some difference between the
-    #     detected circle and the "actual" one, this way we try not to lose any meditions.
+    #     detected circle and the "actual" one, this way we try not to lose any measurements.
 
     output_image = get_exterior_circle(img, center_x, center_y, r, 2 * errorMargin)
 
@@ -172,8 +170,8 @@ def get_error_margin_circle(img, center_x, center_y, r):
 def get_red_ink(img):
     input = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
 
-    # El rojo en HSV tiene un valor H en los limites: con H valiendo tanto 0 como 180 son rojo "puro". Pillamos
-    # dos mascaras precisamente para tomar ambos tipos de rojo: mas "naranja" y mas "violeta".
+    # Red HSV values has limit values for H: both 0 and 180 means "pure red". We apply two masks to keep into
+    # account both kinds of red: the more "orangey" and the more "purpley".
     lower_red = np.array([0, 130, 130])
     upper_red = np.array([20, 255, 255])
     mask0 = cv2.inRange(input, lower_red, upper_red)
@@ -182,10 +180,10 @@ def get_red_ink(img):
     upper_red = np.array([180, 255, 255])
     mask1 = cv2.inRange(input, lower_red, upper_red)
 
-    # Unir ambas mascaras
+    # We join both masks.
     mask = mask0 + mask1
 
-    # La imagen de salida será cero en todos los píxeles excepto en los que formen parte de la máscara
+    # Output image will be zero (black) for every pixel except the masked ones (the red-ish ones).
     output = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
     output[np.where(mask == 0)] = 0
     output[np.where(mask != 0)] = 255
