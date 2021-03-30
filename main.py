@@ -6,20 +6,24 @@ import cv2
 import argparse
 import os
 
+#### Parameters
+# Error margin around the detected circle
+errorMargin = 10
+
 
 def readimage(path):
     # print("Analyzing image at {path}".format(path=path))
     img = cv2.imread(path, cv2.IMREAD_COLOR)
-    meditions = circles(img, path)
-    if meditions > 0:
-        print(path + " has meditions!")
+    measurements = circles(img, path)
+    if measurements > 0:
+        print(path + " has measurements!")
     else:
-        if meditions == 0:
-            print(path + " hasn't meditions!")
+        if measurements == 0:
+            print(path + " hasn't measurements!")
         else:
-            if meditions == -1:
+            if measurements == -1:
                 print("Please review " + path + ", it looks like we see more than one circle.")
-            if meditions == -2:
+            if measurements == -2:
                 print("Please review " + path + ", it looks like we don't see a circle.")
 
 
@@ -91,19 +95,16 @@ def circles(img, path=""):
 
             if intcircles.size == 3:
                 # First operations
-                # Exterior circle, to get meditions a few pixels around the detected circle
-                exterior_circle = get_exterior_circle(cropped_img, int_center_x, int_center_y, r)
                 # Margin circles, used to discard meditions that are not immediately around the circle.
                 margin_circle = get_error_margin_circle(cropped_img, int_center_x, int_center_y, r)
                 # Red ink: color-wise masking
                 red_ink = get_red_ink(cropped_img)
                 # And now we just mask the exterior_circle image and the red_ink one, to know if that image has
                 #     meditions.
-                masked_mask = cv2.bitwise_and(exterior_circle, red_ink)
+                masked_mask = cv2.bitwise_and(margin_circle, red_ink)
                 # showimage(cropped_img, path)
 
                 # Saving the intermediate images to be inspected later.
-                save_image(exterior_circle, path, "_exteriorcircle")
                 save_image(margin_circle, path, "_margincircle")
                 save_image(red_ink, path, "_redink")
                 save_image(masked_mask, path, "_maskedmask")
@@ -141,9 +142,9 @@ def crop_image(img, center_x, center_y, r):
     return crop_img, new_center_x, new_center_y, r
 
 
-def get_exterior_circle(img, center_x, center_y, r, width = 1):
+def get_exterior_circle(img, center_x, center_y, r, width=1):
     exterior_r = r + 10  # Exterior circle, to detect meditions /this should be adjusted later.
-                         # This is NOT the circle being drawn: this is only used to detect meditions.
+    # This is NOT the circle being drawn: this is only used to detect meditions.
     output = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)  # type: mat
 
     cv2.circle(output, (center_x, center_y), exterior_r, (90, 127, 127), width)
@@ -163,10 +164,9 @@ def get_error_margin_circle(img, center_x, center_y, r):
     # It's needed to add a _inside_ circle because sometimes there are some difference between the
     #     detected circle and the "actual" one, this way we try not to lose any meditions.
 
-    output_image = get_exterior_circle(img, center_x, center_y, r, 20)
+    output_image = get_exterior_circle(img, center_x, center_y, r, 2 * errorMargin)
 
     return output_image
-
 
 
 def get_red_ink(img):
