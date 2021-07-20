@@ -247,15 +247,17 @@ def processPath(path):
             processPath(path + "/" + file_name)
 
 
-logger = logging.getLogger("logger")
-handler = logging.StreamHandler(sys.stdout)
-logger.setLevel(logging.INFO)
+def configure_logger():
+    global logger
+    logger = logging.getLogger("logger")
+    handler = logging.StreamHandler(sys.stdout)
+    logger.setLevel(logging.INFO)
+    formatter = logging.Formatter("%(asctime)s - %(message)s")
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
 
-formatter = logging.Formatter("%(asctime)s - %(message)s")
-handler.setFormatter(formatter)
 
-logger.addHandler(handler)
-
+configure_logger()
 
 ap = argparse.ArgumentParser()
 ap.add_argument("-i", "--image", required=True, help="Path to the image or the folder containing images")
