@@ -14,7 +14,7 @@ errorMargin = 10
 
 
 def readimage(path):
-    # logger.log(logging.INFO, "Analyzing image at {path}".format(path=path))
+    logger.log(logging.DEBUG, "Analyzing image at {path}".format(path=path))
     img = cv2.imread(path, cv2.IMREAD_COLOR)
     measurements = circles(img, path)
     if measurements > 0:
@@ -90,7 +90,7 @@ def circles(img, path=""):
         output = img.copy()
         gray = grayscale_image(img)
 
-        # logger.log(logging.DEBUG, "Detecting circles")
+        logger.log(logging.DEBUG, "Detecting circles")
         # detect circles in the image
         circles = cv2.HoughCircles(gray, cv2.HOUGH_GRADIENT, 1.505, 100, param1=400, param2=150)
 
@@ -101,7 +101,7 @@ def circles(img, path=""):
 
             # loop over the (x, y) coordinates and radius of the circles
             for (x, y, r) in intcircles:
-                # logger.log(logging.DEBUG, "Detected circle! Center: ({c_x},{c_y}), radius: {c_r}".format(c_x=x, c_y=y, c_r=r))
+                logger.log(logging.DEBUG, "Detected circle! Center: ({c_x},{c_y}), radius: {c_r}".format(c_x=x, c_y=y, c_r=r))
                 mark_detected_circle(output, r, x, y)
                 # cv2.rectangle(output, (x - 1, y - 1), (x + 1, y + 1), (0, 128, 255), -1)
 
