@@ -5,6 +5,8 @@ import math
 import cv2
 import argparse
 import os
+import sys
+import logging
 
 #### Parameters
 # Error margin around the detected circle
@@ -12,26 +14,25 @@ errorMargin = 10
 
 
 def readimage(path):
-    # print("Analyzing image at {path}".format(path=path))
+    # logger.log(logging.INFO, "Analyzing image at {path}".format(path=path))
     img = cv2.imread(path, cv2.IMREAD_COLOR)
     measurements = circles(img, path)
     if measurements > 0:
-        print(path + " has measurements!")
+        logger.log(logging.INFO, path + " has measurements!")
     else:
         if measurements == 0:
-            print(path + " hasn't measurements!")
+            logger.log(logging.INFO, path + " hasn't measurements!")
         else:
             if measurements == -1:
-                print("Please review " + path + ", it looks like we see more than one circle.")
+                logger.log(logging.ERROR, "Please review " + path + ", it looks like we see more than one circle.")
             if measurements == -2:
-                print("Please review " + path + ", it looks like we don't see a circle.")
+                logger.log(logging.ERROR, "Please review " + path + ", it looks like we don't see a circle.")
 
 
 def show_image(img, title="Imagen"):
-    return
-    # cv2.imshow(title, img)
-    # cv2.waitKey(0)
-    # cv2.destroyAllWindows()
+    cv2.imshow(title, img)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
 
 
 def save_image(img, path, suffix=""):
@@ -43,15 +44,33 @@ def grayscale_image(img):
     return gray
 
 
-def process_groups_array(groups_array, center_x, center_y):
+def process_groups_array(image, groups_array, center_x, center_y):
     i = 0
     for element in groups_array:
-        print("Element " + i.__str__())
         rect_center = element[0]
         r, theta = get_polar_from_cartesian(rect_center[0], rect_center[1], center_x, center_y)
-        print(theta)
-
+        string = i.__str__() + " -> "
+        string += theta.__str__()
+        string += " -> "
+        string += count_white_pixels(image, element).__str__()
+        logger.log(logging.INFO, string)
         i += 1
+
+
+def count_white_pixels(image, rect):
+    start = rect[0]  # (x, y)
+    dimensions = rect[1]  # (Width, height)
+    x = 0
+    y = 0
+    white_pixels = 0
+    while x < dimensions[0]:
+        while y < dimensions[1]:
+            xx = start[0].__int__() + x
+            yy = start[1].__int__() + y
+            white_pixels += image[xx][yy]
+            y += 1
+        x += 1
+    return white_pixels
 
 
 def get_polar_from_cartesian(point_x, point_y, center_x, center_y):
@@ -71,7 +90,7 @@ def circles(img, path=""):
         output = img.copy()
         gray = grayscale_image(img)
 
-        # print("Detecting circles")
+        # logger.log(logging.DEBUG, "Detecting circles")
         # detect circles in the image
         circles = cv2.HoughCircles(gray, cv2.HOUGH_GRADIENT, 1.505, 100, param1=400, param2=150)
 
@@ -82,7 +101,7 @@ def circles(img, path=""):
 
             # loop over the (x, y) coordinates and radius of the circles
             for (x, y, r) in intcircles:
-                # print("Detected circle! Center: ({c_x},{c_y}), radius: {c_r}".format(c_x=x, c_y=y, c_r=r))
+                # logger.log(logging.DEBUG, "Detected circle! Center: ({c_x},{c_y}), radius: {c_r}".format(c_x=x, c_y=y, c_r=r))
                 mark_detected_circle(output, r, x, y)
                 # cv2.rectangle(output, (x - 1, y - 1), (x + 1, y + 1), (0, 128, 255), -1)
 
@@ -108,8 +127,8 @@ def circles(img, path=""):
                 save_image(masked_mask, path, "_maskedmask")
 
                 # Doing the actual annotation group detection
-                with_groups, groups_array = identify_groups(red_ink)
-                process_groups_array(groups_array, center_x, center_y)
+                with_groups, groups_array, straights_groups_array = identify_groups(red_ink)
+                process_groups_array(red_ink, groups_array, center_x, center_y)
 
                 # Saving the image with the detected groups
                 save_image(with_groups, path, "_withgroups")
@@ -135,8 +154,9 @@ def crop_image(img, center_x, center_y, r):
 
     new_center_y = height / 2
     new_center_x = width / 2
-    # print("Center of cropped circle: ({new_center_x},{new_center_y})".format(new_center_x=new_center_x,
-    #                                                                         new_center_y=new_center_y))
+    logger.log(logging.DEBUG,
+                "Center of cropped circle: ({new_center_x},{new_center_y})".format(new_center_x=new_center_x,
+                                                                                   new_center_y=new_center_y))
     return crop_img, new_center_x, new_center_y, r
 
 
@@ -194,22 +214,27 @@ def get_red_ink(img):
 def identify_groups(img):
     kernel = np.ones((10, 10), np.uint8)
 
+    # We apply a morphological filter to reduce noise in the image
     closed_image = cv2.morphologyEx(img, cv2.MORPH_CLOSE, kernel)
 
     boxes = []
+    straight_boxes = []
 
+    # Finding shapes in the image
     contours, hierarchy = cv2.findContours(closed_image, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
     for cnt in contours:
         if 5 < cv2.contourArea(cnt):  # So we discard rectangles with less than five pixels of area. This reduces noise.
-            rect = cv2.minAreaRect(cnt)
-            box = cv2.boxPoints(rect)
-            box = np.int0(box)
-            cv2.drawContours(img, [box], 0, 127, 2)
-            boxes.append(rect)
-            print(cv2.boundingRect(cnt))
+            closest_rect = cv2.minAreaRect(cnt)  # (center(x, y), (width, height), angle of rotation)
+            bounding_rect = cv2.boundingRect(cnt)  # (horizontal, vertical, width, height)
+            box = cv2.boxPoints(closest_rect)  # (bottom left x and y, and then counterclockwise)
+            box = np.int0(box)  # Convert box points to integer
+            cv2.drawContours(img, [box], 0, 127, 2)  # This draws the rectangle around the contour
+            boxes.append(closest_rect)
+            straight_boxes.append(closest_rect)
+            logger.log(logging.DEBUG, bounding_rect)
 
-    show_image(img, "With contours")
-    return img, boxes
+    # show_image(img, "With contours")
+    return img, boxes, straight_boxes
 
 
 def processPath(path):
@@ -220,6 +245,16 @@ def processPath(path):
         file_list = os.listdir(path)
         for file_name in file_list:
             processPath(path + "/" + file_name)
+
+
+logger = logging.getLogger("logger")
+handler = logging.StreamHandler(sys.stdout)
+logger.setLevel(logging.INFO)
+
+formatter = logging.Formatter("%(asctime)s - %(message)s")
+handler.setFormatter(formatter)
+
+logger.addHandler(handler)
 
 
 ap = argparse.ArgumentParser()
