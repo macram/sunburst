@@ -1,42 +1,18 @@
 # This Python file uses the following encoding: utf-8
 
-import numpy as np
-import math
-import cv2
 import argparse
-import os
-import sys
 import logging
+import math
+import os
+
+import cv2
+import numpy as np
+
+import util
 
 #### Parameters
 # Error margin around the detected circle
 errorMargin = 10
-
-
-def readimage(path):
-    logger.log(logging.DEBUG, "Analyzing image at {path}".format(path=path))
-    img = cv2.imread(path, cv2.IMREAD_COLOR)
-    measurements = circles(img, path)
-    if measurements > 0:
-        logger.log(logging.INFO, path + " has measurements!")
-    else:
-        if measurements == 0:
-            logger.log(logging.INFO, path + " hasn't measurements!")
-        else:
-            if measurements == -1:
-                logger.log(logging.ERROR, "Please review " + path + ", it looks like we see more than one circle.")
-            if measurements == -2:
-                logger.log(logging.ERROR, "Please review " + path + ", it looks like we don't see a circle.")
-
-
-def show_image(img, title="Imagen"):
-    cv2.imshow(title, img)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
-
-
-def save_image(img, path, suffix=""):
-    cv2.imwrite(path + suffix + "_modified.jpg", img)
 
 
 def grayscale_image(img):
@@ -55,7 +31,7 @@ def process_groups_array(image, groups_dictionary, center_x, center_y):
             string += theta.__str__()
             string += " -> "
             string += count_white_pixels(image, rect).__str__()
-            logger.log(logging.INFO, string)
+            util.logger.log(logging.INFO, string)
             i += 1
 
 
@@ -92,7 +68,7 @@ def circles(img, path=""):
         output = img.copy()
         gray = grayscale_image(img)
 
-        logger.log(logging.DEBUG, "Detecting circles")
+        util.logger.log(logging.DEBUG, "Detecting circles")
         # detect circles in the image
         circles = cv2.HoughCircles(gray, cv2.HOUGH_GRADIENT, 1.505, 100, param1=400, param2=150)
 
@@ -103,14 +79,14 @@ def circles(img, path=""):
 
             # loop over the (x, y) coordinates and radius of the circles
             for (x, y, r) in intcircles:
-                logger.log(logging.DEBUG, "Detected circle! Center: ({c_x},{c_y}), radius: {c_r}".format(c_x=x, c_y=y, c_r=r))
+                util.logger.log(logging.DEBUG, "Detected circle! Center: ({c_x},{c_y}), radius: {c_r}".format(c_x=x, c_y=y, c_r=r))
                 mark_detected_circle(output, r, x, y)
                 # cv2.rectangle(output, (x - 1, y - 1), (x + 1, y + 1), (0, 128, 255), -1)
 
             cropped_img, center_x, center_y, r = crop_image(output, x, y, r)
             int_center_x = int(center_x)
             int_center_y = int(center_y)
-            save_image(cropped_img, path, "_detectedcircle")
+            util.save_image(cropped_img, path, "_detectedcircle")
 
             if intcircles.size == 3:
                 # First operations
@@ -124,16 +100,16 @@ def circles(img, path=""):
                 # showimage(cropped_img, path)
 
                 # Saving the intermediate images to be inspected later.
-                save_image(margin_circle, path, "_margincircle")
-                save_image(red_ink, path, "_redink")
-                save_image(masked_mask, path, "_maskedmask")
+                util.save_image(margin_circle, path, "_margincircle")
+                util.save_image(red_ink, path, "_redink")
+                util.save_image(masked_mask, path, "_maskedmask")
 
                 # Doing the actual annotation group detection
                 with_groups, groups_array, straights_groups_array = identify_groups(path, red_ink)
                 process_groups_array(red_ink, groups_array, center_x, center_y)
 
                 # Saving the image with the detected groups
-                save_image(with_groups, path, "_withgroups")
+                util.save_image(with_groups, path, "_withgroups")
                 if np.count_nonzero(masked_mask) > 0:
                     return 1
                 else:
@@ -156,7 +132,7 @@ def crop_image(img, center_x, center_y, r):
 
     new_center_y = height / 2
     new_center_x = width / 2
-    logger.log(logging.DEBUG,
+    util.logger.log(logging.DEBUG,
                 "Center of cropped circle: ({new_center_x},{new_center_y})".format(new_center_x=new_center_x,
                                                                                    new_center_y=new_center_y))
     return crop_img, new_center_x, new_center_y, r
@@ -237,7 +213,7 @@ def identify_groups(path, img):
             else:
                 boxes[path] = [closest_rect]
                 straight_boxes[path] = [bounding_rect]
-            logger.log(logging.DEBUG, bounding_rect)
+            util.logger.log(logging.DEBUG, bounding_rect)
 
     # show_image(img, "With contours")
     return img, boxes, straight_boxes
@@ -253,17 +229,23 @@ def processPath(path):
             processPath(path + "/" + file_name)
 
 
-def configure_logger():
-    global logger
-    logger = logging.getLogger("logger")
-    handler = logging.StreamHandler(sys.stdout)
-    logger.setLevel(logging.INFO)
-    formatter = logging.Formatter("%(asctime)s - %(message)s")
-    handler.setFormatter(formatter)
-    logger.addHandler(handler)
+def readimage(path):
+    util.logger.log(logging.DEBUG, "Analyzing image at {path}".format(path=path))
+    img = cv2.imread(path, cv2.IMREAD_COLOR)
+    measurements = circles(img, path)
+    if measurements > 0:
+        util.logger.log(logging.INFO, path + " has measurements!")
+    else:
+        if measurements == 0:
+            util.logger.log(logging.INFO, path + " hasn't measurements!")
+        else:
+            if measurements == -1:
+                util.logger.log(logging.ERROR, "Please review " + path + ", it looks like we see more than one circle.")
+            if measurements == -2:
+                util.logger.log(logging.ERROR, "Please review " + path + ", it looks like we don't see a circle.")
 
 
-configure_logger()
+util.configure_logger()
 
 ap = argparse.ArgumentParser()
 ap.add_argument("-i", "--image", required=True, help="Path to the image or the folder containing images")
