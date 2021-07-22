@@ -230,7 +230,7 @@ def identify_groups(img):
             box = np.int0(box)  # Convert box points to integer
             cv2.drawContours(img, [box], 0, 127, 2)  # This draws the rectangle around the contour
             boxes.append(closest_rect)
-            straight_boxes.append(closest_rect)
+            straight_boxes.append(bounding_rect)
             logger.log(logging.DEBUG, bounding_rect)
 
     # show_image(img, "With contours")
