@@ -44,17 +44,19 @@ def grayscale_image(img):
     return gray
 
 
-def process_groups_array(image, groups_array, center_x, center_y):
+def process_groups_array(image, groups_dictionary, center_x, center_y):
     i = 0
-    for element in groups_array:
-        rect_center = element[0]
-        r, theta = get_polar_from_cartesian(rect_center[0], rect_center[1], center_x, center_y)
-        string = i.__str__() + " -> "
-        string += theta.__str__()
-        string += " -> "
-        string += count_white_pixels(image, element).__str__()
-        logger.log(logging.INFO, string)
-        i += 1
+    for e in groups_dictionary:        # For each image in the dictionary... (we iterate on the keys)
+        element = groups_dictionary[e] # ... we get the value, which is an array of rectangles, ...
+        for rect in element:           # ... and for each rectangle we do our deed.
+            rect_center = rect[0]
+            r, theta = get_polar_from_cartesian(rect_center[0], rect_center[1], center_x, center_y)
+            string = i.__str__() + " -> "
+            string += theta.__str__()
+            string += " -> "
+            string += count_white_pixels(image, rect).__str__()
+            logger.log(logging.INFO, string)
+            i += 1
 
 
 def count_white_pixels(image, rect):
@@ -127,7 +129,7 @@ def circles(img, path=""):
                 save_image(masked_mask, path, "_maskedmask")
 
                 # Doing the actual annotation group detection
-                with_groups, groups_array, straights_groups_array = identify_groups(red_ink)
+                with_groups, groups_array, straights_groups_array = identify_groups(path, red_ink)
                 process_groups_array(red_ink, groups_array, center_x, center_y)
 
                 # Saving the image with the detected groups
@@ -211,14 +213,14 @@ def get_red_ink(img):
     return output
 
 
-def identify_groups(img):
+def identify_groups(path, img):
     kernel = np.ones((10, 10), np.uint8)
 
     # We apply a morphological filter to reduce noise in the image
     closed_image = cv2.morphologyEx(img, cv2.MORPH_CLOSE, kernel)
 
-    boxes = []
-    straight_boxes = []
+    boxes = {}
+    straight_boxes = {}
 
     # Finding shapes in the image
     contours, hierarchy = cv2.findContours(closed_image, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
@@ -229,8 +231,12 @@ def identify_groups(img):
             box = cv2.boxPoints(closest_rect)  # (bottom left x and y, and then counterclockwise)
             box = np.int0(box)  # Convert box points to integer
             cv2.drawContours(img, [box], 0, 127, 2)  # This draws the rectangle around the contour
-            boxes.append(closest_rect)
-            straight_boxes.append(bounding_rect)
+            if path in boxes:
+                boxes[path].append(closest_rect)
+                straight_boxes[path].append(bounding_rect)
+            else:
+                boxes[path] = [closest_rect]
+                straight_boxes[path] = [bounding_rect]
             logger.log(logging.DEBUG, bounding_rect)
 
     # show_image(img, "With contours")
