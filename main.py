@@ -40,6 +40,11 @@ def process_groups_array(image, groups_dictionary, center_x, center_y):
 def count_white_pixels(image, rect):
     start = (rect[0], rect[1])       # (x, y)
     dimensions = (rect[2], rect[3])  # (Width, height)
+
+    cropped_image = image[start[1] - 1:start[1] + dimensions[1], start[0] - 1:start[0] + dimensions[0]]
+    # util.show_image(cropped_image)
+    util.save_image(cropped_image, "images/", "_cropped_"+start[0].__str__()+"-"+start[1].__str__())
+
     x = 0
     y = 0
     white_pixels = 0
@@ -47,7 +52,8 @@ def count_white_pixels(image, rect):
         while y < dimensions[1]:
             xx = start[0] + x
             yy = start[1] + y
-            white_pixels += image[xx][yy]
+            if image[yy][xx] > 0:
+                white_pixels += 1
             y += 1
         x += 1
     return white_pixels
@@ -107,11 +113,11 @@ def circles(img, path=""):
                 util.save_image(masked_mask, path, "_maskedmask")
 
                 # Doing the actual annotation group detection
-                with_groups, groups_array = identify_groups(path, red_ink)
+                with_groups, groups_array, image_with_rectangles = identify_groups(path, red_ink)
                 process_groups_array(red_ink, groups_array, center_x, center_y)
 
                 # Saving the image with the detected groups
-                util.save_image(with_groups, path, "_withgroups")
+                util.save_image(image_with_rectangles, path, "_withgroups")
                 if np.count_nonzero(masked_mask) > 0:
                     return 1
                 else:
@@ -207,7 +213,8 @@ def identify_groups(path, img):
             bounding_rect = cv2.boundingRect(cnt)  # (horizontal, vertical, width, height)
             box = cv2.boxPoints(closest_rect)  # (bottom left x and y, and then counterclockwise)
             box = np.int0(box)  # Convert box points to integer
-            cv2.drawContours(img, [box], 0, 127, 2)  # This draws the rectangle around the contour
+            image_with_rectangles = img.copy()
+            cv2.drawContours(image_with_rectangles, [box], 0, 127, 2)  # This draws the rectangle around the contour
             if path in boxes:
                 boxes[path].append((closest_rect, bounding_rect))
             else:
@@ -215,7 +222,7 @@ def identify_groups(path, img):
             util.logger.log(logging.DEBUG, bounding_rect)
 
     # show_image(img, "With contours")
-    return img, boxes
+    return img, boxes, image_with_rectangles
 
 
 def processPath(path):
