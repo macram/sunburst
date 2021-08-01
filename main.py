@@ -41,7 +41,7 @@ def count_white_pixels(image, rect):
     start = (rect[0], rect[1])       # (x, y)
     dimensions = (rect[2], rect[3])  # (Width, height)
 
-    cropped_image = image[start[1] - 1:start[1] + dimensions[1], start[0] - 1:start[0] + dimensions[0]]
+    cropped_image = util.crop_image(image, start, dimensions)
     # util.show_image(cropped_image)
     util.save_image(cropped_image, "images/", "_cropped_"+start[0].__str__()+"-"+start[1].__str__())
 
