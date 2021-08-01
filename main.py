@@ -6,6 +6,7 @@ import math
 import os
 
 import cv2
+import numpy
 import numpy as np
 
 import util
@@ -38,24 +39,14 @@ def process_groups_array(image, groups_dictionary, center_x, center_y):
 
 
 def count_white_pixels(image, rect):
-    start = (rect[0], rect[1])       # (x, y)
-    dimensions = (rect[2], rect[3])  # (Width, height)
+    start = (rect[0], rect[1])               # (x, y)
+    dimensions = (rect[2] + 1, rect[3] + 1)  # (Width, height)
 
     cropped_image = util.crop_image(image, start, dimensions)
     # util.show_image(cropped_image)
     util.save_image(cropped_image, "images/", "_cropped_"+start[0].__str__()+"-"+start[1].__str__())
 
-    x = 0
-    y = 0
-    white_pixels = 0
-    while x < dimensions[0]:
-        while y < dimensions[1]:
-            xx = start[0] + x
-            yy = start[1] + y
-            if image[yy][xx] > 0:
-                white_pixels += 1
-            y += 1
-        x += 1
+    white_pixels = numpy.count_nonzero(cropped_image)
     return white_pixels
 
 
