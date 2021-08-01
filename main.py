@@ -23,21 +23,23 @@ def grayscale_image(img):
 def process_groups_array(image, groups_dictionary, center_x, center_y):
     i = 0
     for e in groups_dictionary:        # For each image in the dictionary... (we iterate on the keys)
-        element = groups_dictionary[e] # ... we get the value, which is an array of rectangles, ...
-        for rect in element:           # ... and for each rectangle we do our deed.
-            rect_center = rect[0]
+        element = groups_dictionary[e] # ... we get the value, which is an array of tuples associated with each group, ...
+        for tuple in element:          # ... and for each rectangle we do our deed.
+            closest_rect = tuple[0]    # We use the first value in the tuple: the "closest" rectangle.
+            bounding_rect = tuple[1]   # The second value would be the bounding ("straight") one.
+            rect_center = closest_rect[0]
             r, theta = get_polar_from_cartesian(rect_center[0], rect_center[1], center_x, center_y)
             string = i.__str__() + " -> "
             string += theta.__str__()
             string += " -> "
-            string += count_white_pixels(image, rect).__str__()
+            string += count_white_pixels(image, bounding_rect).__str__()
             util.logger.log(logging.INFO, string)
             i += 1
 
 
 def count_white_pixels(image, rect):
-    start = rect[0]  # (x, y)
-    dimensions = rect[1]  # (Width, height)
+    start = (rect[0], rect[1])       # (x, y)
+    dimensions = (rect[2], rect[3])  # (Width, height)
     x = 0
     y = 0
     white_pixels = 0
@@ -105,7 +107,7 @@ def circles(img, path=""):
                 util.save_image(masked_mask, path, "_maskedmask")
 
                 # Doing the actual annotation group detection
-                with_groups, groups_array, straights_groups_array = identify_groups(path, red_ink)
+                with_groups, groups_array = identify_groups(path, red_ink)
                 process_groups_array(red_ink, groups_array, center_x, center_y)
 
                 # Saving the image with the detected groups
@@ -196,7 +198,6 @@ def identify_groups(path, img):
     closed_image = cv2.morphologyEx(img, cv2.MORPH_CLOSE, kernel)
 
     boxes = {}
-    straight_boxes = {}
 
     # Finding shapes in the image
     contours, hierarchy = cv2.findContours(closed_image, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
@@ -208,15 +209,13 @@ def identify_groups(path, img):
             box = np.int0(box)  # Convert box points to integer
             cv2.drawContours(img, [box], 0, 127, 2)  # This draws the rectangle around the contour
             if path in boxes:
-                boxes[path].append(closest_rect)
-                straight_boxes[path].append(bounding_rect)
+                boxes[path].append((closest_rect, bounding_rect))
             else:
-                boxes[path] = [closest_rect]
-                straight_boxes[path] = [bounding_rect]
+                boxes[path] = [(closest_rect, bounding_rect)]
             util.logger.log(logging.DEBUG, bounding_rect)
 
     # show_image(img, "With contours")
-    return img, boxes, straight_boxes
+    return img, boxes
 
 
 def processPath(path):
