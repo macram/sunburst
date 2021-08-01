@@ -33,20 +33,23 @@ def process_groups_array(image, groups_dictionary, center_x, center_y):
             string = i.__str__() + " -> "
             string += theta.__str__()
             string += " -> "
-            string += count_white_pixels(image, bounding_rect).__str__()
+            string += count_white_pixels(image, bounding_rect, i.__str__()).__str__()
             util.logger.log(logging.INFO, string)
             i += 1
 
 
-def count_white_pixels(image, rect):
-    start = (rect[0], rect[1])               # (x, y)
+def count_white_pixels(image, rect, group_id = ""):
+    start = ((rect[0] - 1, 0)[rect[0] <= 0],
+             (rect[1] - 1, 0)[rect[1] <= 0])               # (x, y)
     dimensions = (rect[2] + 1, rect[3] + 1)  # (Width, height)
 
     cropped_image = util.crop_image(image, start, dimensions)
-    # util.show_image(cropped_image)
-    util.save_image(cropped_image, "images/", "_cropped_"+start[0].__str__()+"-"+start[1].__str__())
+    util.save_image(cropped_image, "images/", "_cropped_"+ group_id + "_" + start[0].__str__() + "-" + start[1].__str__())
 
     white_pixels = numpy.count_nonzero(cropped_image)
+
+    # util.show_image(cropped_image, white_pixels.__str__() + " white pixels")
+
     return white_pixels
 
 

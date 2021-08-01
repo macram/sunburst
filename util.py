@@ -16,7 +16,7 @@ def save_image(img, path, suffix=""):
 
 
 def crop_image(image, start, dimensions):
-    cropped_image = image[start[1] - 1:start[1] + dimensions[1], start[0] - 1:start[0] + dimensions[0]].copy()
+    cropped_image = image[start[1]:start[1] + dimensions[1], start[0]:start[0] + dimensions[0]].copy()
     return cropped_image
 
 
