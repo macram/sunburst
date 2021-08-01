@@ -45,8 +45,8 @@ def count_white_pixels(image, rect):
     white_pixels = 0
     while x < dimensions[0]:
         while y < dimensions[1]:
-            xx = start[0].__int__() + x
-            yy = start[1].__int__() + y
+            xx = start[0] + x
+            yy = start[1] + y
             white_pixels += image[xx][yy]
             y += 1
         x += 1
