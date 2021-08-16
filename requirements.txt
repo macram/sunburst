@@ -18,7 +18,6 @@ PyQt6-sip==13.1.0
 sip==6.1.1
 six==1.16.0
 stevedore==3.3.0
-TBB==0.2
 toml==0.10.2
 virtualenv==20.7.2
 virtualenv-clone==0.5.6
