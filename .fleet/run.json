@@ -1,0 +1,16 @@
+{
+    "configurations": [
+        {
+            "name": "Ejecutar con directorio de imágenes",
+            "type": "command",
+            "program": "python",
+            "args": ["$WORKSPACE_DIR$/main.py", "-i", "$WORKSPACE_DIR$/images"]
+        },
+        {
+            "name": "Ejecutar con una sola imagen",
+            "type": "command",
+            "program": "python",
+            "args": ["$WORKSPACE_DIR$/main.py", "-i", "$WORKSPACE_DIR$/images/test1.jpeg"]
+        }
+    ]
+}
