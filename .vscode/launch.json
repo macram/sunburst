@@ -8,8 +8,9 @@
             "name": "Python: Archivo actual",
             "type": "python",
             "request": "launch",
-            "program": "${file}",
+            "program": "python",
             "args": [
+                "${workspaceFolderBasename}/main.py",
                 "-i",
                  "./images"
             ],
