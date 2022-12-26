@@ -10,10 +10,13 @@ import numpy
 import numpy as np
 
 import util
+from model import Image
 
 #### Parameters
 # Error margin around the detected circle
 errorMargin = 10
+
+images = []
 
 
 def grayscale_image(img):
@@ -231,10 +234,12 @@ def processPath(path):
 
 def readimage(path):
     util.logger.log(logging.DEBUG, "Analyzing image at {path}".format(path=path))
+    imageObject = Image(path)
     img = cv2.imread(path, cv2.IMREAD_COLOR)
     measurements = circles(img, path)
     if measurements > 0:
         util.logger.log(logging.INFO, path + " has measurements!")
+        images.append(imageObject)
     else:
         if measurements == 0:
             util.logger.log(logging.INFO, path + " hasn't measurements!")
