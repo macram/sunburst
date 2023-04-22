@@ -75,11 +75,14 @@ def get_furthest_pixel_distance_from_center(image, rect, group_id, center_x, cen
     while x < dimensions[0]:
         while y < dimensions[1]:
             if cropped_image[y][x] > 0: # If the pixel is not black
-                dist = math.sqrt((start[1]+x - center_x)*(start[1]+x - center_x) + (start[0]+y - center_y)*(start[0]+y - center_y))
+                #  we calculate the euclidean distance between that pixel and the circle center
+                dist = math.dist((start[1]+x, start[0]+y), (center_x, center_y))
+                # Then we pick the max distance
                 if dist > max_distance:
                     max_distance = dist
             y += 1
         x += 1
+    # and return the max minus the radius.
     return max_distance - radius
 
 
