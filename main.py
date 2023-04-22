@@ -34,15 +34,26 @@ def process_groups_array(image, groups_dictionary, center_x, center_y, radius):
             rect_center = closest_rect[0]
             r, theta = get_polar_from_cartesian(rect_center[0], rect_center[1], center_x, center_y)
             white_pixels = count_white_pixels(image, bounding_rect, i.__str__())
-            height = get_furthest_pixel_distance_from_center(image, bounding_rect, i.__str__(), center_x, center_y, radius)
+            height, base = get_height_and_base(image, bounding_rect, i.__str__(), center_x, center_y, radius, closest_rect)
             string = i.__str__() + " -> "
             string += theta.__str__()
             string += " -> "
             string += white_pixels.__str__()
-            string += " -> "
+            string += " -> Height: "
             string += height.__str__()
+            string += " -> Base: "
+            string += base.__str__()
             util.logger.log(logging.INFO, string)
             i += 1
+
+
+def get_height_and_base(image, bounding_rect, group_id, center_x, center_y, radius, closest_rect):
+    max_distance = get_furthest_pixel_distance_from_center(image, bounding_rect, group_id, center_x, center_y, radius)
+    closest_rect_width = closest_rect[1][0]
+    closest_rect_height = closest_rect[1][1]
+    closest_dimension = util.closest_value([closest_rect_width, closest_rect_height], max_distance)
+    other_dimension = closest_rect_height if closest_dimension == closest_rect_width else closest_rect_width
+    return closest_dimension, other_dimension
 
 
 def count_white_pixels(image, rect, group_id = ""):

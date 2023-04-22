@@ -3,6 +3,7 @@
 import logging
 import sys
 import cv2
+import numpy
 
 
 def show_image(img, title="Imagen"):
@@ -28,3 +29,9 @@ def configure_logger():
     formatter = logging.Formatter("%(asctime)s - %(message)s")
     handler.setFormatter(formatter)
     logger.addHandler(handler)
+
+
+def closest_value(input_list, value):
+    arr = numpy.asarray(input_list)
+    i = (numpy.abs(arr - value)).argmin()
+    return arr[i]
