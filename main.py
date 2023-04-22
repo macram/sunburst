@@ -24,7 +24,7 @@ def grayscale_image(img):
     return gray
 
 
-def process_groups_array(image, groups_dictionary, center_x, center_y):
+def process_groups_array(image, groups_dictionary, center_x, center_y, radius):
     i = 0
     for e in groups_dictionary:        # For each image in the dictionary... (we iterate on the keys)
         element = groups_dictionary[e] # ... we get the value, which is an array of tuples associated with each group, ...
@@ -33,10 +33,14 @@ def process_groups_array(image, groups_dictionary, center_x, center_y):
             bounding_rect = tuple[1]   # The second value would be the bounding ("straight") one.
             rect_center = closest_rect[0]
             r, theta = get_polar_from_cartesian(rect_center[0], rect_center[1], center_x, center_y)
+            white_pixels = count_white_pixels(image, bounding_rect, i.__str__())
+            height = get_furthest_pixel_distance_from_center(image, bounding_rect, i.__str__(), center_x, center_y, radius)
             string = i.__str__() + " -> "
             string += theta.__str__()
             string += " -> "
-            string += count_white_pixels(image, bounding_rect, i.__str__()).__str__()
+            string += white_pixels.__str__()
+            string += " -> "
+            string += height.__str__()
             util.logger.log(logging.INFO, string)
             i += 1
 
@@ -54,6 +58,29 @@ def count_white_pixels(image, rect, group_id = ""):
     # util.show_image(cropped_image, white_pixels.__str__() + " white pixels")
 
     return white_pixels
+
+
+def get_furthest_pixel_distance_from_center(image, rect, group_id, center_x, center_y, radius):
+    # Rect is the straight rect info
+    # First we iterate on every pixel
+    max_distance = 0
+    start = ((rect[0] - 1, 0)[rect[0] <= 0],
+             (rect[1] - 1, 0)[rect[1] <= 0])               # (x, y)
+    dimensions = (rect[2] + 1, rect[3] + 1)  # (Width, height)
+
+    cropped_image = util.crop_image(image, start, dimensions)
+
+    x = 0
+    y = 0
+    while x < dimensions[0]:
+        while y < dimensions[1]:
+            if cropped_image[y][x] > 0: # If the pixel is not black
+                dist = math.sqrt((start[1]+x - center_x)*(start[1]+x - center_x) + (start[0]+y - center_y)*(start[0]+y - center_y))
+                if dist > max_distance:
+                    max_distance = dist
+            y += 1
+        x += 1
+    return max_distance - radius
 
 
 def get_polar_from_cartesian(point_x, point_y, center_x, center_y):
@@ -83,12 +110,12 @@ def circles(img, path=""):
             intcircles = np.round(circles[0, :]).astype("int")
 
             # loop over the (x, y) coordinates and radius of the circles
-            for (x, y, r) in intcircles:
-                util.logger.log(logging.DEBUG, "Detected circle! Center: ({c_x},{c_y}), radius: {c_r}".format(c_x=x, c_y=y, c_r=r))
-                mark_detected_circle(output, r, x, y)
+            for (x, y, radius) in intcircles:
+                util.logger.log(logging.DEBUG, "Detected circle! Center: ({c_x},{c_y}), radius: {c_r}".format(c_x=x, c_y=y, c_r=radius))
+                mark_detected_circle(output, radius, x, y)
                 # cv2.rectangle(output, (x - 1, y - 1), (x + 1, y + 1), (0, 128, 255), -1)
 
-            cropped_img, center_x, center_y, r = crop_image(output, x, y, r)
+            cropped_img, center_x, center_y, radius = crop_image(output, x, y, radius)
             int_center_x = int(center_x)
             int_center_y = int(center_y)
             util.save_image(cropped_img, path, "_detectedcircle")
@@ -96,7 +123,7 @@ def circles(img, path=""):
             if intcircles.size == 3:
                 # First operations
                 # Margin circles, used to discard measurements that are not immediately around the circle.
-                margin_circle = get_error_margin_circle(cropped_img, int_center_x, int_center_y, r)
+                margin_circle = get_error_margin_circle(cropped_img, int_center_x, int_center_y, radius)
                 # Red ink: color-wise masking
                 red_ink = get_red_ink(cropped_img)
                 # And now we just mask the exterior_circle image and the red_ink one, to know if that image has
@@ -111,7 +138,7 @@ def circles(img, path=""):
 
                 # Doing the actual annotation group detection
                 with_groups, groups_array, image_with_rectangles = identify_groups(path, red_ink)
-                process_groups_array(red_ink, groups_array, center_x, center_y)
+                process_groups_array(red_ink, groups_array, center_x, center_y, radius)
 
                 # Saving the image with the detected groups
                 util.save_image(image_with_rectangles, path, "_withgroups")
