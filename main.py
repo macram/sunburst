@@ -12,7 +12,7 @@ import numpy as np
 import util
 from model import Image
 
-#### Parameters
+### Parameters
 # Error margin around the detected circle
 errorMargin = 10
 
@@ -28,9 +28,10 @@ def process_groups_array(image, groups_dictionary, center_x, center_y, radius):
     i = 0
     for e in groups_dictionary:        # For each image in the dictionary... (we iterate on the keys)
         element = groups_dictionary[e] # ... we get the value, which is an array of tuples associated with each group, ...
-        for tuple in element:          # ... and for each rectangle we do our deed.
-            closest_rect = tuple[0]    # We use the first value in the tuple: the "closest" rectangle.
-            bounding_rect = tuple[1]   # The second value would be the bounding ("straight") one.
+        for rectangle_tuple in element:          # ... and for each rectangle we do our deed.
+            closest_rect = rectangle_tuple[0]    # We use the first value in the tuple: the "closest" rectangle.
+            bounding_rect = rectangle_tuple[1]   # The second value would be the bounding ("straight") one.
+            #contour = rectangle_tuple[2]
             rect_center = closest_rect[0]
             r, theta = get_polar_from_cartesian(rect_center[0], rect_center[1], center_x, center_y)
             white_pixels = count_white_pixels(image, bounding_rect, i.__str__())
@@ -99,13 +100,13 @@ def get_furthest_pixel_distance_from_center(image, rect, group_id, center_x, cen
 
 def get_polar_from_cartesian(point_x, point_y, center_x, center_y):
     x = point_x - center_x  # Less than 0 <- Left hemisphere
-    y = point_y - center_y  # Less than que 0 <- Upper hemisphere
+    y = point_y - center_y  # Less than 0 <- Upper hemisphere
 
     r = np.sqrt(x ** 2 + y ** 2)
-    theta = (np.arctan2(x, y))  # Radians
-    theta_deg = (math.degrees(theta) + 270) % 360
+    theta = (np.arctan2(y, x))  # Radians
+    theta_deg = math.degrees(theta)
 
-    return r, theta_deg
+    return r, -theta_deg
 
 
 def circles(img, path=""):
@@ -157,7 +158,7 @@ def circles(img, path=""):
                 # Saving the image with the detected groups
                 util.save_image(image_with_rectangles, path, "_withgroups")
                 if np.count_nonzero(masked_mask) > 0:
-                    return 1
+                    return 1 ## CHECK THIS, we could optimize the algorithm with early returns for non-successful detections
                 else:
                     return 0
             else:
@@ -250,13 +251,13 @@ def identify_groups(path, img):
             closest_rect = cv2.minAreaRect(cnt)  # (center(x, y), (width, height), angle of rotation)
             bounding_rect = cv2.boundingRect(cnt)  # (horizontal, vertical, width, height)
             box = cv2.boxPoints(closest_rect)  # (bottom left x and y, and then counterclockwise)
-            box = np.int0(box)  # Convert box points to integer
+            box = np.intp(box)  # Convert box points to integer
             image_with_rectangles = img.copy()
             cv2.drawContours(image_with_rectangles, [box], 0, 127, 2)  # This draws the rectangle around the contour
             if path in boxes:
-                boxes[path].append((closest_rect, bounding_rect))
+                boxes[path].append((closest_rect, bounding_rect, cnt))
             else:
-                boxes[path] = [(closest_rect, bounding_rect)]
+                boxes[path] = [(closest_rect, bounding_rect, cnt)]
             util.logger.log(logging.DEBUG, bounding_rect)
 
     # show_image(img, "With contours")
