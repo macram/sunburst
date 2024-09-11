@@ -10,21 +10,24 @@ import numpy
 import numpy as np
 
 import util
-from model import Image
+from model import Image, MeasuredBurst
 
 ### Parameters
 # Error margin around the detected circle
 errorMargin = 10
-
-images = []
-
 
 def grayscale_image(img):
     gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
     return gray
 
 
-def process_groups_array(image, groups_dictionary, center_x, center_y, radius):
+def process_groups_array(image_object):
+    image = image_object.red_ink_img
+    groups_dictionary = image_object.groups_array
+    center_x = image_object.center_x
+    center_y = image_object.center_y
+    radius = image_object.circle_radius
+
     i = 0
     for e in groups_dictionary:        # For each image in the dictionary... (we iterate on the keys)
         element = groups_dictionary[e] # ... we get the value, which is an array of tuples associated with each group, ...
@@ -36,15 +39,9 @@ def process_groups_array(image, groups_dictionary, center_x, center_y, radius):
             r, theta = get_polar_from_cartesian(rect_center[0], rect_center[1], center_x, center_y)
             white_pixels = count_white_pixels(image, bounding_rect, i.__str__())
             height, base = get_height_and_base(image, bounding_rect, i.__str__(), center_x, center_y, radius, closest_rect)
-            string = i.__str__() + " -> "
-            string += theta.__str__()
-            string += " -> "
-            string += white_pixels.__str__()
-            string += " -> Height: "
-            string += height.__str__()
-            string += " -> Base: "
-            string += base.__str__()
-            util.logger.log(logging.INFO, string)
+            measured_burst = MeasuredBurst(i, r, theta, white_pixels, height, base)
+            image_object.measured_bursts.append(measured_burst)
+            util.logger.log(logging.INFO, measured_burst.get_description())
             i += 1
 
 
@@ -109,7 +106,8 @@ def get_polar_from_cartesian(point_x, point_y, center_x, center_y):
     return r, -theta_deg
 
 
-def circles(img, path=""):
+def circles(image_object, path=""):
+    img = image_object.img
     if isinstance(img, (np.ndarray, np.generic)):
 
         output = img.copy()
@@ -153,7 +151,12 @@ def circles(img, path=""):
 
                 # Doing the actual annotation group detection
                 with_groups, groups_array, image_with_rectangles = identify_groups(path, red_ink)
-                process_groups_array(red_ink, groups_array, center_x, center_y, radius)
+                image_object.red_ink_img = red_ink
+                image_object.groups_array = groups_array
+                image_object.center_x = center_x
+                image_object.center_y = center_y
+                image_object.circle_radius = radius
+                process_groups_array(image_object)
 
                 # Saving the image with the detected groups
                 util.save_image(image_with_rectangles, path, "_withgroups")
@@ -265,23 +268,25 @@ def identify_groups(path, img):
 
 
 def processPath(path):
+    images = []
     if os.path.isfile(path) is True:
         if "_modified.jpg" not in path:
-            readimage(path)
+            image_object = readimage(path)
+            images.append(image_object)
     if os.path.isdir(path) is True:
         file_list = os.listdir(path)
         for file_name in file_list:
             processPath(path + "/" + file_name)
+    util.logger.log(logging.INFO, "Images processed {images}".format(images=len(images)))
 
 
 def readimage(path):
     util.logger.log(logging.DEBUG, "Analyzing image at {path}".format(path=path))
-    imageObject = Image(path)
     img = cv2.imread(path, cv2.IMREAD_COLOR)
-    measurements = circles(img, path)
+    imageObject = Image(path, img)
+    measurements = circles(imageObject, path)
     if measurements > 0:
         util.logger.log(logging.INFO, path + " has measurements!")
-        images.append(imageObject)
     else:
         if measurements == 0:
             util.logger.log(logging.INFO, path + " hasn't measurements!")
@@ -290,6 +295,7 @@ def readimage(path):
                 util.logger.log(logging.ERROR, "Please review " + path + ", it looks like we see more than one circle.")
             if measurements == -2:
                 util.logger.log(logging.ERROR, "Please review " + path + ", it looks like we don't see a circle.")
+    return imageObject
 
 
 util.configure_logger()
