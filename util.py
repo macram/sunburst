@@ -25,7 +25,7 @@ def configure_logger():
     global logger
     logger = logging.getLogger("logger")
     handler = logging.StreamHandler(sys.stdout)
-    logger.setLevel(logging.INFO)
+    logger.setLevel(logging.WARNING)
     formatter = logging.Formatter("%(asctime)s - %(message)s")
     handler.setFormatter(formatter)
     logger.addHandler(handler)

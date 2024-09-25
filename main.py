@@ -27,6 +27,7 @@ def process_groups_array(image_object):
     center_x = image_object.center_x
     center_y = image_object.center_y
     radius = image_object.circle_radius
+    image_object.measured_bursts = []
 
     i = 0
     for e in groups_dictionary:        # For each image in the dictionary... (we iterate on the keys)
@@ -60,7 +61,7 @@ def count_white_pixels(image, rect, group_id = ""):
     dimensions = (rect[2] + 1, rect[3] + 1)  # (Width, height)
 
     cropped_image = util.crop_image(image, start, dimensions)
-    util.save_image(cropped_image, "images/", "_cropped_"+ group_id + "_" + start[0].__str__() + "-" + start[1].__str__())
+    util.save_image(cropped_image, "tempimages/", "_cropped_"+ group_id + "_" + start[0].__str__() + "-" + start[1].__str__())
 
     white_pixels = numpy.count_nonzero(cropped_image)
 
@@ -267,26 +268,29 @@ def identify_groups(path, img):
     return img, boxes, image_with_rectangles
 
 
-def processPath(path):
+def processPath(path, initial_index = 0):
     images = []
+    index = initial_index
     if os.path.isfile(path) is True:
         if "_modified.jpg" not in path:
-            image_object = readimage(path)
+            image_object = readimage(path, index)
             images.append(image_object)
+            index += 1
     if os.path.isdir(path) is True:
         file_list = os.listdir(path)
         for file_name in file_list:
-            processPath(path + "/" + file_name)
+            processPath(path + "/" + file_name, initial_index)
     util.logger.log(logging.INFO, "Images processed {images}".format(images=len(images)))
 
 
-def readimage(path):
+def readimage(path, index):
     util.logger.log(logging.DEBUG, "Analyzing image at {path}".format(path=path))
     img = cv2.imread(path, cv2.IMREAD_COLOR)
-    imageObject = Image(path, img)
+    imageObject = Image(index, path, img)
     measurements = circles(imageObject, path)
     if measurements > 0:
         util.logger.log(logging.INFO, path + " has measurements!")
+        print(imageObject.get_description())
     else:
         if measurements == 0:
             util.logger.log(logging.INFO, path + " hasn't measurements!")
