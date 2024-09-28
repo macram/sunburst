@@ -10,6 +10,7 @@ import numpy
 import numpy as np
 
 import util
+import io
 from model import Image, MeasuredBurst
 
 ### Parameters
@@ -306,10 +307,15 @@ def readimage(path):
 def start(path, output_file):
     images = processPath(path, [])
     output_string = ""
+    i = 0
     for image in images:
+        image.image_index = i
         output_string += image.get_description() + "\n"
-    if output_file != None:
-        print("Output file")
+        i += 1
+    if output_file is not None:
+        with open(output_file, "w") as f:
+            f.write(output_string)
+            print("File " + output_file + " succesfully written.")
     else:
         print(output_string)
 
