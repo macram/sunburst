@@ -323,6 +323,6 @@ util.configure_logger()
 
 ap = argparse.ArgumentParser()
 ap.add_argument("-i", "--image", required=True, help="Path to the image or the folder containing images")
-ap.add_argument("-o", "--output", required=False, help="Output file")
+ap.add_argument("-ho", "--human_output", required=False, help="Output file readable by humans")
 args = vars(ap.parse_args())
-start(args["image"], output_file=args["output"])
+start(args["image"], output_file=args["human_output"])

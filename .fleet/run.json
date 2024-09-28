@@ -10,7 +10,7 @@
             "name": "Ejecutar con directorio de imágenes, salida",
             "type": "command",
             "program": "python",
-            "args": ["$WORKSPACE_DIR$/main.py", "-i", "$WORKSPACE_DIR$/images", "-o", "$WORKSPACE_DIR$/salida.txt"]
+            "args": ["$WORKSPACE_DIR$/main.py", "-i", "$WORKSPACE_DIR$/images", "-ho", "$WORKSPACE_DIR$/salida.txt"]
         },
         {
             "name": "Test1",
