@@ -10,8 +10,8 @@ import numpy
 import numpy as np
 
 import util
-import io
 from model import Image, MeasuredBurst
+from util import show_image
 
 ### Parameters
 # Error margin around the detected circle
@@ -157,7 +157,7 @@ def circles(image_object, path=""):
                 util.save_image(masked_mask, path, "_maskedmask")
 
                 # Doing the actual annotation group detection
-                with_groups, groups_array, image_with_rectangles = identify_groups(path, red_ink)
+                with_groups, groups_array, image_with_rectangles = identify_groups(path, red_ink, margin_circle)
                 image_object.red_ink_img = red_ink
                 image_object.groups_array = groups_array
                 image_object.center_x = center_x
@@ -246,7 +246,7 @@ def get_red_ink(img):
     return output
 
 
-def identify_groups(path, img):
+def identify_groups(path, img, margin_circle):
     kernel = np.ones((10, 10), np.uint8)
 
     # We apply a morphological filter to reduce noise in the image
@@ -256,22 +256,31 @@ def identify_groups(path, img):
 
     # Finding shapes in the image
     contours, hierarchy = cv2.findContours(closed_image, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+    image_with_rectangles = img.copy()
     for cnt in contours:
         if 5 < cv2.contourArea(cnt):  # So we discard rectangles with less than five pixels of area. This reduces noise.
             closest_rect = cv2.minAreaRect(cnt)  # (center(x, y), (width, height), angle of rotation)
             bounding_rect = cv2.boundingRect(cnt)  # (horizontal, vertical, width, height)
             box = cv2.boxPoints(closest_rect)  # (bottom left x and y, and then counterclockwise)
             box = np.intp(box)  # Convert box points to integer
-            image_with_rectangles = img.copy()
-            cv2.drawContours(image_with_rectangles, [box], 0, 127, 2)  # This draws the rectangle around the contour
-            if path in boxes:
-                boxes[path].append((closest_rect, bounding_rect, cnt))
-            else:
-                boxes[path] = [(closest_rect, bounding_rect, cnt)]
+            #cv2.drawContours(image_with_rectangles, [box], 0, 127, 2)
+            if check_if_box_is_in_mask(box, margin_circle):
+                image_with_rectangles = cv2.rectangle(image_with_rectangles, (bounding_rect[0], bounding_rect[1]), (bounding_rect[0]+bounding_rect[2], bounding_rect[1]+bounding_rect[3]), 127, 2)
+                if path in boxes:
+                    boxes[path].append((closest_rect, bounding_rect, cnt))
+                else:
+                    boxes[path] = [(closest_rect, bounding_rect, cnt)]
             util.logger.log(logging.DEBUG, bounding_rect)
 
     # show_image(img, "With contours")
     return img, boxes, image_with_rectangles
+
+
+def check_if_box_is_in_mask(box, margin_circle):
+    temp_image = np.zeros(margin_circle.shape[:2], np.uint8)
+    cv2.fillPoly(temp_image, [box], 255)
+    masked_circle = cv2.bitwise_and(margin_circle, temp_image)
+    return np.count_nonzero(masked_circle)
 
 
 def processPath(path, initial_images, recursive = True):
