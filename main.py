@@ -100,12 +100,16 @@ def get_furthest_pixel_distance_from_center(image, rect, group_id, center_x, cen
 def get_polar_from_cartesian(point_x, point_y, center_x, center_y):
     x = point_x - center_x  # Less than 0 <- Left hemisphere
     y = point_y - center_y  # Less than 0 <- Upper hemisphere
+    complex_coordinates = complex(x, y)
 
-    r = np.sqrt(x ** 2 + y ** 2)
-    theta = (np.arctan2(y, x))  # Radians
-    theta_deg = math.degrees(theta)
+    r = np.abs(complex_coordinates)
+    theta = -np.angle(complex_coordinates, deg=True)
+    if theta < 0:
+        theta_deg = 360 + theta
+    else:
+        theta_deg = theta
 
-    return r, -theta_deg
+    return r, theta_deg
 
 
 def circles(image_object, path=""):
