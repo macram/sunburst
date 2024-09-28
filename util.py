@@ -36,3 +36,7 @@ def closest_value(input_list, value):
     arr = numpy.asarray(input_list)
     i = (numpy.abs(arr - value)).argmin()
     return arr[i]
+
+
+def is_image_path(filename):
+    return ".jpg" in filename or ".jpeg" in filename or ".png" in filename or ".gif" in filename or ".bmp" in filename

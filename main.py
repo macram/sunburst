@@ -273,29 +273,26 @@ def identify_groups(path, img):
     return img, boxes, image_with_rectangles
 
 
-def processPath(path, initial_index = 0):
-    images = []
-    index = initial_index
+def processPath(path, initial_images):
+    images = initial_images
     if os.path.isfile(path) is True:
-        if "_modified.jpg" not in path:
-            image_object = readimage(path, index)
+        if util.is_image_path(path) and "_modified.jpg" not in path:
+            image_object = readimage(path)
             images.append(image_object)
-            index += 1
     if os.path.isdir(path) is True:
         file_list = os.listdir(path)
         for file_name in file_list:
-            processPath(path + "/" + file_name, initial_index)
+            processPath(path + "/" + file_name, images)
     util.logger.log(logging.INFO, "Images processed {images}".format(images=len(images)))
+    return images
 
-
-def readimage(path, index):
+def readimage(path):
     util.logger.log(logging.DEBUG, "Analyzing image at {path}".format(path=path))
     img = cv2.imread(path, cv2.IMREAD_COLOR)
-    imageObject = Image(index, path, img)
+    imageObject = Image(path, img)
     measurements = circles(imageObject, path)
     if measurements > 0:
         util.logger.log(logging.INFO, path + " has measurements!")
-        print(imageObject.get_description())
     else:
         if measurements == 0:
             util.logger.log(logging.INFO, path + " hasn't measurements!")
@@ -306,10 +303,20 @@ def readimage(path, index):
                 util.logger.log(logging.ERROR, "Please review " + path + ", it looks like we don't see a circle.")
     return imageObject
 
+def start(path, output_file):
+    images = processPath(path, [])
+    output_string = ""
+    for image in images:
+        output_string += image.get_description() + "\n"
+    if output_file != None:
+        print("Output file")
+    else:
+        print(output_string)
 
 util.configure_logger()
 
 ap = argparse.ArgumentParser()
 ap.add_argument("-i", "--image", required=True, help="Path to the image or the folder containing images")
+ap.add_argument("-o", "--output", required=False, help="Output file")
 args = vars(ap.parse_args())
-processPath(args["image"])
+start(args["image"], output_file=args["output"])

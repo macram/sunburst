@@ -14,8 +14,7 @@ class Image(object):
     circle_radius = None
     measured_bursts = []
 
-    def __init__(self, index, path, img):
-        self.image_index = index
+    def __init__(self, path, img):
         self.path = path
         self.img = img
 
