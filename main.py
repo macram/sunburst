@@ -306,7 +306,7 @@ def readimage(path):
 
 def start(path, output_file):
     images = processPath(path, [])
-    output_string = ""
+    output_string = "Processed images at path " + path + "\n\n"
     i = 0
     for image in images:
         image.image_index = i
