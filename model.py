@@ -24,7 +24,8 @@ class Image(object):
         string += "===============\n"
         string += "Path: \"" + self.path + "\"\n"
         string += "Measured " + len(self.measured_bursts).__str__() + " bursts\n"
-        for burst in self.measured_bursts:
+        sorted_bursts = sorted(self.measured_bursts, key=MeasuredBurst.theta)
+        for burst in sorted_bursts:
             string += burst.get_description()
         return string
 
@@ -55,3 +56,6 @@ class MeasuredBurst(object):
         string += self.base.__str__()
         string += "\n"
         return string
+
+    def theta(self):
+        return self.theta
