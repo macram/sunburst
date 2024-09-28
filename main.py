@@ -15,6 +15,7 @@ from model import Image, MeasuredBurst
 ### Parameters
 # Error margin around the detected circle
 errorMargin = 10
+circle_outer_margin = 30
 
 def grayscale_image(img):
     gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
@@ -178,7 +179,7 @@ def mark_detected_circle(output, r, x, y):
 
 
 def crop_image(img, center_x, center_y, r):
-    crop_img = img[center_y - r - 30:center_y + r + 30, center_x - r - 30:center_x + r + 30]
+    crop_img = img[center_y - r - circle_outer_margin:center_y + r + circle_outer_margin, center_x - r - circle_outer_margin:center_x + r + circle_outer_margin]
     height, width, channels = crop_img.shape
 
     new_center_y = height / 2
@@ -190,7 +191,7 @@ def crop_image(img, center_x, center_y, r):
 
 
 def get_exterior_circle(img, center_x, center_y, r, width=1):
-    exterior_r = r + 10  # Exterior circle, to detect measurements /this should be adjusted later.
+    exterior_r = r + errorMargin  # Exterior circle, to detect measurements /this should be adjusted later.
     # This is NOT the circle being drawn: this is only used to detect measurements.
     output = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)  # type: mat
 
