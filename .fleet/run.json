@@ -24,7 +24,6 @@
             "program": "python",
             "args": ["$WORKSPACE_DIR$/main.py", "-i", "$WORKSPACE_DIR$/images", "-ho", "$WORKSPACE_DIR$/salida.txt", "-r"]
         },
-
         {
             "name": "Test1",
             "type": "command",
