@@ -5,6 +5,7 @@ import sys
 import cv2
 import numpy
 
+logger = None
 
 def show_image(img, title="Imagen"):
     cv2.imshow(title, img)
