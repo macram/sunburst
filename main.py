@@ -307,7 +307,7 @@ def readimage(path):
     return imageObject
 
 def start(path, output_file, recursive = False):
-    print("Recursive is " + recursive.__str__())
+    util.logger.log(logging.DEBUG, "Recursive processing is " + recursive.__str__())
     images = processPath(path, [], recursive)
     output_string = "Processed images at path " + path + "\n\n"
     i = 0
