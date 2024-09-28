@@ -274,7 +274,7 @@ def identify_groups(path, img):
     return img, boxes, image_with_rectangles
 
 
-def processPath(path, initial_images):
+def processPath(path, initial_images, recursive = True):
     images = initial_images
     if os.path.isfile(path) is True:
         if util.is_image_path(path) and "_modified.jpg" not in path:
@@ -283,7 +283,9 @@ def processPath(path, initial_images):
     if os.path.isdir(path) is True:
         file_list = os.listdir(path)
         for file_name in file_list:
-            processPath(path + "/" + file_name, images)
+            new_path = path + "/" + file_name
+            if os.path.isfile(new_path) or (os.path.isdir(new_path) and recursive is True):
+                processPath(new_path, images)
     util.logger.log(logging.INFO, "Images processed {images}".format(images=len(images)))
     return images
 
@@ -304,8 +306,9 @@ def readimage(path):
                 util.logger.log(logging.ERROR, "Please review " + path + ", it looks like we don't see a circle.")
     return imageObject
 
-def start(path, output_file):
-    images = processPath(path, [])
+def start(path, output_file, recursive = False):
+    print("Recursive is " + recursive.__str__())
+    images = processPath(path, [], recursive)
     output_string = "Processed images at path " + path + "\n\n"
     i = 0
     for image in images:
@@ -324,5 +327,6 @@ util.configure_logger()
 ap = argparse.ArgumentParser()
 ap.add_argument("-i", "--image", required=True, help="Path to the image or the folder containing images")
 ap.add_argument("-ho", "--human_output", required=False, help="Output file readable by humans")
+ap.add_argument("-r", "--recursive", required=False, action='store_true', help="Allows recursive processing of the path specified at -i")
 args = vars(ap.parse_args())
-start(args["image"], output_file=args["human_output"])
+start(args["image"], output_file=args["human_output"], recursive=args["recursive"])

@@ -13,6 +13,19 @@
             "args": ["$WORKSPACE_DIR$/main.py", "-i", "$WORKSPACE_DIR$/images", "-ho", "$WORKSPACE_DIR$/salida.txt"]
         },
         {
+            "name": "Ejecutar con directorio de imágenes, recursivo",
+            "type": "command",
+            "program": "python",
+            "args": ["$WORKSPACE_DIR$/main.py", "-i", "$WORKSPACE_DIR$/images", "-r"]
+        },
+        {
+            "name": "Ejecutar con directorio de imágenes recursivo, salida",
+            "type": "command",
+            "program": "python",
+            "args": ["$WORKSPACE_DIR$/main.py", "-i", "$WORKSPACE_DIR$/images", "-ho", "$WORKSPACE_DIR$/salida.txt", "-r"]
+        },
+
+        {
             "name": "Test1",
             "type": "command",
             "program": "python",
@@ -22,7 +35,7 @@
             "name": "Test2",
             "type": "command",
             "program": "python",
-            "args": ["$WORKSPACE_DIR$/main.py", "-i", "$WORKSPACE_DIR$/images/test2.jpeg"]
+            "args": ["$WORKSPACE_DIR$/main.py", "-i", "$WORKSPACE_DIR$/images/MásImágenes/test2.jpeg"]
         },
         {
             "name": "Test3",
