@@ -18,7 +18,13 @@ class Image(object):
         self.path = path
         self.img = img
 
-    def get_description(self):
+    def get_description(self, human = True, headers = False):
+        if human is True:
+            return self.get_human_description()
+        else:
+            return self.get_csv_description(headers)
+
+    def get_human_description(self):
         string = "Image n. " + self.image_index.__str__() + "\n"
         string += "===============\n"
         string += "Path: \"" + self.path + "\"\n"
@@ -26,6 +32,18 @@ class Image(object):
         sorted_bursts = sorted(self.measured_bursts, key=MeasuredBurst.theta)
         for burst in sorted_bursts:
             string += burst.get_description()
+        return string
+
+    def get_csv_description(self, headers=True):
+        if headers is True:
+            string = "Index" + ","
+            string += "Angle" + ","
+            string += "Area" + ","
+            string += "Height" + ","
+            string += "Base"+ "\n"
+        sorted_bursts = sorted(self.measured_bursts, key=MeasuredBurst.theta)
+        for burst in sorted_bursts:
+            string += burst.get_csv_description()
         return string
 
 class MeasuredBurst(object):
@@ -44,7 +62,13 @@ class MeasuredBurst(object):
         self.height = height
         self.base = base
 
-    def get_description(self):
+    def get_description(self, human = True):
+        if human is True:
+            return self.get_human_description()
+        else:
+            return self.get_csv_description()
+
+    def get_human_description(self):
         string = self.i.__str__() + " -> "
         string += self.theta.__str__()
         string += " -> Area: "
@@ -54,6 +78,14 @@ class MeasuredBurst(object):
         string += " -> Base: "
         string += self.base.__str__()
         string += "\n"
+        return string
+
+    def get_csv_description(self):
+        string = self.i.__str__() + ","
+        string += self.theta.__str__() + ","
+        string += self.white_pixels.__str__() + ","
+        string += self.height.__str__() + ","
+        string += self.base.__str__() + "\n"
         return string
 
     def theta(self):

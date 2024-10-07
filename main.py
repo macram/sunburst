@@ -315,15 +315,14 @@ def readimage(path):
                 util.logger.log(logging.ERROR, "Please review " + path + ", it looks like we don't see a circle.")
     return imageObject
 
-def start(path, output_file, recursive = False, split_files = False, terminal = False):
+def start(path, output_file, recursive = False, split_files = False, terminal = False, headers = False):
     util.logger.log(logging.DEBUG, "Recursive processing is " + recursive.__str__())
-    print("Split is "+split_files.__str__())
     i = 0
     output_string = "Processed images at path " + path + "\n\n"
     images = processPath(path, [], recursive)
     for image in images:
         image.image_index = i
-        output_string += image.get_description() + "\n"
+        output_string += image.get_description(True) + "\n"
         i += 1
     if output_file is not None:
         with open(output_file, "w") as f:
@@ -333,7 +332,7 @@ def start(path, output_file, recursive = False, split_files = False, terminal = 
         for image in images:
             path = image.path+"_output.txt"
             with open(path, "w") as f:
-                f.write(image.get_description())
+                f.write(image.get_description(False, headers = headers))
                 print("File " + path.__str__() + " succesfully written.")
     if terminal is True:
         print(output_string)
@@ -345,8 +344,8 @@ ap.add_argument("-i", "--image", required=True, help="Path to the image or the f
 ap.add_argument("-t", "--terminal", required=False, action="store_true", help="Shows the output in the same terminal.")
 ap.add_argument("-of", "--output_file", required=False, help="Output file readable by humans.")
 ap.add_argument("-r", "--recursive", required=False, action='store_true', help="Allows recursive processing of the path specified at -i")
-ap.add_argument("-f", "--format", required=False, help="Select the output format: human or CSV. The default one is human.")
-ap.add_argument("-sf", "--split_files", required=False, action="store_true", help="If true will create one file per image, at the same path. If false will create only one file. ")
+ap.add_argument("-sf", "--split_files", required=False, action="store_true", help="If true will create one CSV file per image, at the same path.")
+ap.add_argument("-ch", "--csv_headers", required=False, action="store_true", help="If set, CSV files will have a header.")
 
 args = vars(ap.parse_args())
-start(args["image"], output_file=args["output_file"], recursive=args["recursive"], split_files=args["split_files"], terminal=args["terminal"])
+start(args["image"], output_file=args["output_file"], recursive=args["recursive"], split_files=args["split_files"], terminal=args["terminal"], headers=args["csv_headers"])
