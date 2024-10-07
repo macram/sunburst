@@ -39,4 +39,4 @@ def closest_value(input_list, value):
 
 
 def is_image_path(filename):
-    return ".jpg" in filename or ".jpeg" in filename or ".png" in filename or ".gif" in filename or ".bmp" in filename
+    return filename.endswith(".jpg") or filename.endswith(".jpeg") or filename.endswith(".png") or filename.endswith(".gif") or filename.endswith(".bmp")
