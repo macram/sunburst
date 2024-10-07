@@ -315,11 +315,12 @@ def readimage(path):
                 util.logger.log(logging.ERROR, "Please review " + path + ", it looks like we don't see a circle.")
     return imageObject
 
-def start(path, output_file, recursive = False):
+def start(path, output_file, recursive = False, split_files = False, terminal = False):
     util.logger.log(logging.DEBUG, "Recursive processing is " + recursive.__str__())
-    images = processPath(path, [], recursive)
-    output_string = "Processed images at path " + path + "\n\n"
+    print("Split is "+split_files.__str__())
     i = 0
+    output_string = "Processed images at path " + path + "\n\n"
+    images = processPath(path, [], recursive)
     for image in images:
         image.image_index = i
         output_string += image.get_description() + "\n"
@@ -328,14 +329,24 @@ def start(path, output_file, recursive = False):
         with open(output_file, "w") as f:
             f.write(output_string)
             print("File " + output_file + " succesfully written.")
-    else:
+    if split_files is True:
+        for image in images:
+            path = image.path+"_output.txt"
+            with open(path, "w") as f:
+                f.write(image.get_description())
+                print("File " + path.__str__() + " succesfully written.")
+    if terminal is True:
         print(output_string)
 
 util.configure_logger()
 
 ap = argparse.ArgumentParser()
 ap.add_argument("-i", "--image", required=True, help="Path to the image or the folder containing images")
-ap.add_argument("-of", "--output_file", required=False, help="Output file readable by humans")
+ap.add_argument("-t", "--terminal", required=False, action="store_true", help="Shows the output in the same terminal.")
+ap.add_argument("-of", "--output_file", required=False, help="Output file readable by humans.")
 ap.add_argument("-r", "--recursive", required=False, action='store_true', help="Allows recursive processing of the path specified at -i")
+ap.add_argument("-f", "--format", required=False, help="Select the output format: human or CSV. The default one is human.")
+ap.add_argument("-sf", "--split_files", required=False, action="store_true", help="If true will create one file per image, at the same path. If false will create only one file. ")
+
 args = vars(ap.parse_args())
-start(args["image"], output_file=args["output_file"], recursive=args["recursive"])
+start(args["image"], output_file=args["output_file"], recursive=args["recursive"], split_files=args["split_files"], terminal=args["terminal"])
