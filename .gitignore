@@ -4,5 +4,5 @@ old-venv
 /images/
 .idea/shelf
 salida.txt
-.venv
-__pychache__
+.venv/
+__pychache__/
