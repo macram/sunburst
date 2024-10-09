@@ -62,11 +62,11 @@ class MeasuredBurst(object):
         self.base = base
 
     def get_description(self, circle_radius, human = True):
-        circle_sphere_area = 4 * circle_radius * circle_radius * numpy.pi
+        circle_area = circle_radius * circle_radius * numpy.pi
         if human is True:
-            return self.get_human_description(circle_radius = circle_radius, circle_area = circle_sphere_area)
+            return self.get_human_description(circle_radius = circle_radius, circle_area = circle_area)
         else:
-            return self.get_csv_description(circle_radius = circle_radius, circle_area = circle_sphere_area)
+            return self.get_csv_description(circle_radius = circle_radius, circle_area = circle_area)
 
     def get_human_description(self, circle_radius, circle_area):
         string = self.i.__str__() + " -> "
