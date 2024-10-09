@@ -330,7 +330,7 @@ def start(path, output_file, recursive = False, split_files = False, terminal = 
             print("File " + output_file + " succesfully written.")
     if split_files is True:
         for image in images:
-            path = image.path+"_output.txt"
+            path = image.path+"_output.csv"
             with open(path, "w") as f:
                 f.write(image.get_description(False, headers = headers))
                 print("File " + path.__str__() + " succesfully written.")
