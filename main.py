@@ -6,12 +6,10 @@ import math
 import os
 
 import cv2
-import numpy
 import numpy as np
 
 import util
 from model import Image, MeasuredBurst
-from util import show_image
 
 ### Parameters
 # Error margin around the detected circle
@@ -65,7 +63,7 @@ def count_white_pixels(image, rect, group_id = ""):
     cropped_image = util.crop_image(image, start, dimensions)
     util.save_image(cropped_image, "tempimages/", "_cropped_"+ group_id + "_" + start[0].__str__() + "-" + start[1].__str__())
 
-    white_pixels = numpy.count_nonzero(cropped_image)
+    white_pixels = np.count_nonzero(cropped_image)
 
     # util.show_image(cropped_image, white_pixels.__str__() + " white pixels")
 
