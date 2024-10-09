@@ -42,7 +42,7 @@ class Image(object):
             string += "Base"+ "\n"
         sorted_bursts = sorted(self.measured_bursts, key=MeasuredBurst.theta)
         for burst in sorted_bursts:
-            string += burst.get_csv_description(circle_radius = self.circle_radius)
+            string += burst.get_description(self.circle_radius, human = False)
         return string
 
 class MeasuredBurst(object):
