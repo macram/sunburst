@@ -1,7 +1,5 @@
 # This Python file uses the following encoding: utf-8
-from array import ArrayType
-
-import cv2
+import numpy
 
 class Image(object):
     image_index = None
@@ -31,10 +29,11 @@ class Image(object):
         string += "Measured " + len(self.measured_bursts).__str__() + " bursts\n"
         sorted_bursts = sorted(self.measured_bursts, key=MeasuredBurst.theta)
         for burst in sorted_bursts:
-            string += burst.get_description()
+            string += burst.get_description(circle_radius = self.circle_radius)
         return string
 
     def get_csv_description(self, headers=True):
+        string = ""
         if headers is True:
             string = "Index" + ","
             string += "Angle" + ","
@@ -43,7 +42,7 @@ class Image(object):
             string += "Base"+ "\n"
         sorted_bursts = sorted(self.measured_bursts, key=MeasuredBurst.theta)
         for burst in sorted_bursts:
-            string += burst.get_csv_description()
+            string += burst.get_csv_description(circle_radius = self.circle_radius)
         return string
 
 class MeasuredBurst(object):
@@ -62,30 +61,31 @@ class MeasuredBurst(object):
         self.height = height
         self.base = base
 
-    def get_description(self, human = True):
+    def get_description(self, circle_radius, human = True):
+        circle_sphere_area = 4 * circle_radius * circle_radius * numpy.pi
         if human is True:
-            return self.get_human_description()
+            return self.get_human_description(circle_radius = circle_radius, circle_area = circle_sphere_area)
         else:
-            return self.get_csv_description()
+            return self.get_csv_description(circle_radius = circle_radius, circle_area = circle_sphere_area)
 
-    def get_human_description(self):
+    def get_human_description(self, circle_radius, circle_area):
         string = self.i.__str__() + " -> "
         string += self.theta.__str__()
         string += " -> Area: "
-        string += self.white_pixels.__str__()
+        string += (self.white_pixels/circle_area).__str__()
         string += " -> Height: "
-        string += self.height.__str__()
+        string += (self.height/circle_radius).__str__()
         string += " -> Base: "
-        string += self.base.__str__()
+        string += (self.base/circle_radius).__str__()
         string += "\n"
         return string
 
-    def get_csv_description(self):
+    def get_csv_description(self, circle_radius, circle_area):
         string = self.i.__str__() + ","
         string += self.theta.__str__() + ","
-        string += self.white_pixels.__str__() + ","
-        string += self.height.__str__() + ","
-        string += self.base.__str__() + "\n"
+        string += (self.white_pixels/circle_area).__str__() + ","
+        string += (self.height/circle_radius).__str__() + ","
+        string += (self.base/circle_radius).__str__() + "\n"
         return string
 
     def theta(self):

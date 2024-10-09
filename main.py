@@ -44,7 +44,7 @@ def process_groups_array(image_object):
             height, base = get_height_and_base(image, bounding_rect, i.__str__(), center_x, center_y, radius, closest_rect)
             measured_burst = MeasuredBurst(i, r, theta, white_pixels, height, base)
             image_object.measured_bursts.append(measured_burst)
-            util.logger.log(logging.INFO, measured_burst.get_description())
+            util.logger.log(logging.INFO, measured_burst.get_description(circle_radius = image_object.circle_radius))
             i += 1
 
 
