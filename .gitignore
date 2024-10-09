@@ -5,4 +5,4 @@ old-venv
 .idea/shelf
 salida.txt
 .venv/
-__pycache__
+__pycache__/
