@@ -283,7 +283,7 @@ def check_if_box_is_in_mask(box, margin_circle):
     return np.count_nonzero(masked_circle)
 
 
-def processPath(path, initial_images, recursive = True):
+def process_path(path, initial_images, recursive = True):
     images = initial_images
     if os.path.isfile(path) is True:
         if util.is_image_path(path) and "_modified.jpg" not in path:
@@ -294,15 +294,15 @@ def processPath(path, initial_images, recursive = True):
         for file_name in file_list:
             new_path = path + "/" + file_name
             if os.path.isfile(new_path) or (os.path.isdir(new_path) and recursive is True):
-                processPath(new_path, images)
+                process_path(new_path, images)
     util.logger.log(logging.INFO, "Images processed {images}".format(images=len(images)))
     return images
 
 def readimage(path):
     util.logger.log(logging.DEBUG, "Analyzing image at {path}".format(path=path))
     img = cv2.imread(path, cv2.IMREAD_COLOR)
-    imageObject = Image(path, img)
-    measurements = circles(imageObject, path)
+    image_object = Image(path, img)
+    measurements = circles(image_object, path)
     if measurements > 0:
         util.logger.log(logging.INFO, path + " has measurements!")
     else:
@@ -313,13 +313,13 @@ def readimage(path):
                 util.logger.log(logging.ERROR, "Please review " + path + ", it looks like we see more than one circle.")
             if measurements == -2:
                 util.logger.log(logging.ERROR, "Please review " + path + ", it looks like we don't see a circle.")
-    return imageObject
+    return image_object
 
 def start(path, output_file, recursive = False, split_files = False, terminal = False, headers = False):
     util.logger.log(logging.DEBUG, "Recursive processing is " + recursive.__str__())
     i = 0
     output_string = "Processed images at path " + path + "\n\n"
-    images = processPath(path, [], recursive)
+    images = process_path(path, [], recursive)
     for image in images:
         image.image_index = i
         output_string += image.get_description(True) + "\n"
