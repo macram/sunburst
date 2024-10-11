@@ -15,6 +15,7 @@ from model import Image, MeasuredBurst
 # Error margin around the detected circle
 errorMargin = 10
 circle_outer_margin = 30
+min_contour_area = 5
 
 def grayscale_image(img):
     gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
@@ -256,12 +257,11 @@ def identify_groups(path, img, margin_circle):
     contours, hierarchy = cv2.findContours(closed_image, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
     image_with_rectangles = img.copy()
     for cnt in contours:
-        if 5 < cv2.contourArea(cnt):  # So we discard rectangles with less than five pixels of area. This reduces noise.
+        if min_contour_area < cv2.contourArea(cnt):  # So we discard rectangles with less than five pixels of area. This reduces noise.
             closest_rect = cv2.minAreaRect(cnt)  # (center(x, y), (width, height), angle of rotation)
             bounding_rect = cv2.boundingRect(cnt)  # (horizontal, vertical, width, height)
             box = cv2.boxPoints(closest_rect)  # (bottom left x and y, and then counterclockwise)
             box = np.intp(box)  # Convert box points to integer
-            #cv2.drawContours(image_with_rectangles, [box], 0, 127, 2)
             if check_if_box_is_in_mask(box, margin_circle):
                 image_with_rectangles = cv2.rectangle(image_with_rectangles, (bounding_rect[0], bounding_rect[1]), (bounding_rect[0]+bounding_rect[2], bounding_rect[1]+bounding_rect[3]), 127, 2)
                 if path in boxes:
