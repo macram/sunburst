@@ -3,43 +3,43 @@
         {
             "name": "Ejecutar con directorio de imágenes",
             "type": "command",
-            "program": "python",
+            "program": "python3",
             "args": ["$WORKSPACE_DIR$/main.py", "-i", "$WORKSPACE_DIR$/images"]
         },
         {
             "name": "Ejecutar con directorio de imágenes, salida",
             "type": "command",
-            "program": "python",
+            "program": "python3",
             "args": ["$WORKSPACE_DIR$/main.py", "-i", "$WORKSPACE_DIR$/images", "-ho", "$WORKSPACE_DIR$/salida.txt"]
         },
         {
             "name": "Ejecutar con directorio de imágenes, recursivo",
             "type": "command",
-            "program": "python",
+            "program": "python3",
             "args": ["$WORKSPACE_DIR$/main.py", "-i", "$WORKSPACE_DIR$/images", "-r"]
         },
         {
             "name": "Ejecutar con directorio de imágenes recursivo, salida",
             "type": "command",
-            "program": "python",
+            "program": "python3",
             "args": ["$WORKSPACE_DIR$/main.py", "-i", "$WORKSPACE_DIR$/images", "-ho", "$WORKSPACE_DIR$/salida.txt", "-r"]
         },
         {
             "name": "Test1",
             "type": "command",
-            "program": "python",
+            "program": "python3",
             "args": ["$WORKSPACE_DIR$/main.py", "-i", "$WORKSPACE_DIR$/images/test1.jpeg"]
         },
         {
             "name": "Test2",
             "type": "command",
-            "program": "python",
+            "program": "python3",
             "args": ["$WORKSPACE_DIR$/main.py", "-i", "$WORKSPACE_DIR$/images/MásImágenes/test2.jpeg"]
         },
         {
             "name": "Test3",
             "type": "command",
-            "program": "python",
+            "program": "python3",
             "args": ["$WORKSPACE_DIR$/main.py", "-i", "$WORKSPACE_DIR$/images/Circulo1.jpeg"]
         },
     ]
