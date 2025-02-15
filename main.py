@@ -287,6 +287,7 @@ def process_path(path, initial_images, recursive = True):
             images.append(image_object)
     if os.path.isdir(path) is True:
         file_list = os.listdir(path)
+        constants.open_toml_string(path)
         for file_name in file_list:
             new_path = path + "/" + file_name
             if os.path.isfile(new_path) or (os.path.isdir(new_path) and recursive is True):
