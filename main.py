@@ -224,12 +224,12 @@ def get_red_ink(img):
 
     # Red HSV values has limit values for H: both 0 and 180 means "pure red". We apply two masks to keep into
     # account both kinds of red: the more "orangey" and the more "purpley".
-    lower_red = np.array([0, 130, 130])
-    upper_red = np.array([20, 255, 255])
+    lower_red = np.array(constants.ink_color_first[0])
+    upper_red = np.array(constants.ink_color_first[1])
     mask0 = cv2.inRange(input, lower_red, upper_red)
 
-    lower_red = np.array([160, 130, 130])
-    upper_red = np.array([180, 255, 255])
+    lower_red = np.array(constants.ink_color_second[0])
+    upper_red = np.array(constants.ink_color_second[1])
     mask1 = cv2.inRange(input, lower_red, upper_red)
 
     # We join both masks.
