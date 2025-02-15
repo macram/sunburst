@@ -11,11 +11,9 @@ import numpy as np
 import util
 from model import Image, MeasuredBurst
 
-### Parameters
-# Error margin around the detected circle
-errorMargin = 10
-circle_outer_margin = 30
-min_contour_area = 5
+import tomllib
+
+import constants
 
 def grayscale_image(img):
     gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
@@ -183,7 +181,7 @@ def mark_detected_circle(output, r, x, y):
 
 
 def crop_image(img, center_x, center_y, r):
-    crop_img = img[center_y - r - circle_outer_margin:center_y + r + circle_outer_margin, center_x - r - circle_outer_margin:center_x + r + circle_outer_margin]
+    crop_img = img[center_y - r - constants.circle_outer_margin:center_y + r + constants.circle_outer_margin, center_x - r - constants.circle_outer_margin:center_x + r + constants.circle_outer_margin]
     height, width, channels = crop_img.shape
 
     new_center_y = height / 2
@@ -195,7 +193,7 @@ def crop_image(img, center_x, center_y, r):
 
 
 def get_exterior_circle(img, center_x, center_y, r, width=1):
-    exterior_r = r + errorMargin  # Exterior circle, to detect measurements /this should be adjusted later.
+    exterior_r = r + constants.errorMargin  # Exterior circle, to detect measurements /this should be adjusted later.
     # This is NOT the circle being drawn: this is only used to detect measurements.
     output = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)  # type: mat
 
@@ -216,7 +214,7 @@ def get_error_margin_circle(img, center_x, center_y, r):
     # It's needed to add a _inside_ circle because sometimes there are some difference between the
     #     detected circle and the "actual" one, this way we try not to lose any measurements.
 
-    output_image = get_exterior_circle(img, center_x, center_y, r, 2 * errorMargin)
+    output_image = get_exterior_circle(img, center_x, center_y, r, 2 * constants.errorMargin)
 
     return output_image
 
@@ -257,7 +255,7 @@ def identify_groups(path, img, margin_circle):
     contours, hierarchy = cv2.findContours(closed_image, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
     image_with_rectangles = img.copy()
     for cnt in contours:
-        if min_contour_area < cv2.contourArea(cnt):  # So we discard rectangles with less than five pixels of area. This reduces noise.
+        if constants.min_contour_area < cv2.contourArea(cnt):  # So we discard rectangles with less than five pixels of area. This reduces noise.
             closest_rect = cv2.minAreaRect(cnt)  # (center(x, y), (width, height), angle of rotation)
             bounding_rect = cv2.boundingRect(cnt)  # (horizontal, vertical, width, height)
             box = cv2.boxPoints(closest_rect)  # (bottom left x and y, and then counterclockwise)
@@ -296,6 +294,7 @@ def process_path(path, initial_images, recursive = True):
     util.logger.log(logging.INFO, "Images processed {images}".format(images=len(images)))
     return images
 
+
 def readimage(path):
     util.logger.log(logging.DEBUG, "Analyzing image at {path}".format(path=path))
     img = cv2.imread(path, cv2.IMREAD_COLOR)
@@ -312,6 +311,7 @@ def readimage(path):
             if measurements == -2:
                 util.logger.log(logging.ERROR, "Please review " + path + ", it looks like we don't see a circle.")
     return image_object
+
 
 def start(path, output_file, recursive = False, split_files = False, terminal = False, headers = False):
     util.logger.log(logging.DEBUG, "Recursive processing is " + recursive.__str__())
