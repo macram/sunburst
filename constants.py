@@ -1,6 +1,6 @@
 ### Parameters
 # Error margin around the detected circle
-errorMargin = 10
+error_margin = 10
 circle_outer_margin = 30
 min_contour_area = 5
 

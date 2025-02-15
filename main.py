@@ -193,7 +193,7 @@ def crop_image(img, center_x, center_y, r):
 
 
 def get_exterior_circle(img, center_x, center_y, r, width=1):
-    exterior_r = r + constants.errorMargin  # Exterior circle, to detect measurements /this should be adjusted later.
+    exterior_r = r + constants.error_margin  # Exterior circle, to detect measurements /this should be adjusted later.
     # This is NOT the circle being drawn: this is only used to detect measurements.
     output = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)  # type: mat
 
@@ -214,7 +214,7 @@ def get_error_margin_circle(img, center_x, center_y, r):
     # It's needed to add a _inside_ circle because sometimes there are some difference between the
     #     detected circle and the "actual" one, this way we try not to lose any measurements.
 
-    output_image = get_exterior_circle(img, center_x, center_y, r, 2 * constants.errorMargin)
+    output_image = get_exterior_circle(img, center_x, center_y, r, 2 * constants.error_margin)
 
     return output_image
 
