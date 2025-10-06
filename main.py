@@ -11,9 +11,7 @@ import numpy as np
 import util
 from model import Image, MeasuredBurst
 
-import tomllib
-
-import constants
+from configuration import Configuration
 
 def grayscale_image(img):
     gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
@@ -37,16 +35,16 @@ def process_groups_array(image_object):
             #contour = rectangle_tuple[2]
             rect_center = closest_rect[0]
             r, theta = get_polar_from_cartesian(rect_center[0], rect_center[1], center_x, center_y)
-            white_pixels = count_white_pixels(image, bounding_rect, i.__str__())
-            height, base = get_height_and_base(image, bounding_rect, i.__str__(), center_x, center_y, radius, closest_rect)
+            white_pixels = count_white_pixels(image, bounding_rect, image_object.configuration, i.__str__())
+            height, base = get_height_and_base(image, bounding_rect, i.__str__(), center_x, center_y, radius, closest_rect, image_object.configuration)
             measured_burst = MeasuredBurst(i, r, theta, white_pixels, height, base)
             image_object.measured_bursts.append(measured_burst)
             util.logger.log(logging.INFO, measured_burst.get_description(circle_radius = image_object.circle_radius))
             i += 1
 
 
-def get_height_and_base(image, bounding_rect, group_id, center_x, center_y, radius, closest_rect):
-    max_distance = get_furthest_pixel_distance_from_center(image, bounding_rect, group_id, center_x, center_y, radius)
+def get_height_and_base(image, bounding_rect, group_id, center_x, center_y, radius, closest_rect, configuration):
+    max_distance = get_furthest_pixel_distance_from_center(image, bounding_rect, group_id, center_x, center_y, radius, configuration)
     closest_rect_width = closest_rect[1][0]
     closest_rect_height = closest_rect[1][1]
     closest_dimension = util.closest_value([closest_rect_width, closest_rect_height], max_distance)
@@ -54,7 +52,7 @@ def get_height_and_base(image, bounding_rect, group_id, center_x, center_y, radi
     return closest_dimension, other_dimension
 
 
-def count_white_pixels(image, rect, group_id = ""):
+def count_white_pixels(image, rect, configuration, group_id = ""):
     start = ((rect[0] - 1, 0)[rect[0] <= 0],
              (rect[1] - 1, 0)[rect[1] <= 0])               # (x, y)
     dimensions = (rect[2] + 1, rect[3] + 1)  # (Width, height)
@@ -69,7 +67,7 @@ def count_white_pixels(image, rect, group_id = ""):
     return white_pixels
 
 
-def get_furthest_pixel_distance_from_center(image, rect, group_id, center_x, center_y, radius):
+def get_furthest_pixel_distance_from_center(image, rect, group_id, center_x, center_y, radius, configuration):
     # Rect is the straight rect info
     # First we iterate on every pixel
     max_distance = 0
@@ -132,7 +130,7 @@ def circles(image_object, path=""):
                 mark_detected_circle(output, radius, x, y)
                 # cv2.rectangle(output, (x - 1, y - 1), (x + 1, y + 1), (0, 128, 255), -1)
 
-            cropped_img, center_x, center_y, radius = crop_image(output, x, y, radius)
+            cropped_img, center_x, center_y, radius = crop_image(output, x, y, radius, image_object.configuration)
             int_center_x = int(center_x)
             int_center_y = int(center_y)
             util.save_image(cropped_img, path, "_detectedcircle")
@@ -140,9 +138,9 @@ def circles(image_object, path=""):
             if intcircles.size == 3:
                 # First operations
                 # Margin circles, used to discard measurements that are not immediately around the circle.
-                margin_circle = get_error_margin_circle(cropped_img, int_center_x, int_center_y, radius)
+                margin_circle = get_error_margin_circle(cropped_img, int_center_x, int_center_y, radius, configuration=image_object.configuration)
                 # Red ink: color-wise masking
-                red_ink = get_red_ink(cropped_img)
+                red_ink = get_red_ink(cropped_img, configuration=image_object.configuration)
                 # And now we just mask the exterior_circle image and the red_ink one, to know if that image has
                 #     measurements.
                 masked_mask = cv2.bitwise_and(margin_circle, red_ink)
@@ -154,7 +152,7 @@ def circles(image_object, path=""):
                 util.save_image(masked_mask, path, "_maskedmask")
 
                 # Doing the actual annotation group detection
-                with_groups, groups_array, image_with_rectangles = identify_groups(path, red_ink, margin_circle)
+                with_groups, groups_array, image_with_rectangles = identify_groups(path, red_ink, margin_circle, configuration=image_object.configuration)
                 image_object.red_ink_img = red_ink
                 image_object.groups_array = groups_array
                 image_object.center_x = center_x
@@ -180,8 +178,9 @@ def mark_detected_circle(output, r, x, y):
     cv2.circle(output, (x, y), r, (0, 255, 255), 1)
 
 
-def crop_image(img, center_x, center_y, r):
-    crop_img = img[center_y - r - constants.circle_outer_margin:center_y + r + constants.circle_outer_margin, center_x - r - constants.circle_outer_margin:center_x + r + constants.circle_outer_margin]
+def crop_image(img, center_x, center_y, r, configuration):
+    circle_outer_margin = configuration.circle_outer_margin
+    crop_img = img[center_y - r - circle_outer_margin:center_y + r + circle_outer_margin, center_x - r - circle_outer_margin:center_x + r + circle_outer_margin]
     height, width, channels = crop_img.shape
 
     new_center_y = height / 2
@@ -192,8 +191,8 @@ def crop_image(img, center_x, center_y, r):
     return crop_img, new_center_x, new_center_y, r
 
 
-def get_exterior_circle(img, center_x, center_y, r, width=1):
-    exterior_r = r + constants.error_margin  # Exterior circle, to detect measurements /this should be adjusted later.
+def get_exterior_circle(img, center_x, center_y, r, configuration, width=1):
+    exterior_r = r + configuration.error_margin  # Exterior circle, to detect measurements /this should be adjusted later.
     # This is NOT the circle being drawn: this is only used to detect measurements.
     output = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)  # type: mat
 
@@ -209,27 +208,27 @@ def get_exterior_circle(img, center_x, center_y, r, width=1):
     return output
 
 
-def get_error_margin_circle(img, center_x, center_y, r):
+def get_error_margin_circle(img, center_x, center_y, r, configuration):
     # We're going for 10 pixels outside and inside the detected circle.
     # It's needed to add a _inside_ circle because sometimes there are some difference between the
     #     detected circle and the "actual" one, this way we try not to lose any measurements.
 
-    output_image = get_exterior_circle(img, center_x, center_y, r, 2 * constants.error_margin)
+    output_image = get_exterior_circle(img, center_x, center_y, r, configuration, 2 * configuration.error_margin)
 
     return output_image
 
 
-def get_red_ink(img):
+def get_red_ink(img, configuration):
     input = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
 
     # Red HSV values has limit values for H: both 0 and 180 means "pure red". We apply two masks to keep into
     # account both kinds of red: the more "orangey" and the more "purpley".
-    lower_red = np.array(constants.ink_color_first[0])
-    upper_red = np.array(constants.ink_color_first[1])
+    lower_red = np.array(configuration.ink_color_first[0])
+    upper_red = np.array(configuration.ink_color_first[1])
     mask0 = cv2.inRange(input, lower_red, upper_red)
 
-    lower_red = np.array(constants.ink_color_second[0])
-    upper_red = np.array(constants.ink_color_second[1])
+    lower_red = np.array(configuration.ink_color_second[0])
+    upper_red = np.array(configuration.ink_color_second[1])
     mask1 = cv2.inRange(input, lower_red, upper_red)
 
     # We join both masks.
@@ -243,7 +242,7 @@ def get_red_ink(img):
     return output
 
 
-def identify_groups(path, img, margin_circle):
+def identify_groups(path, img, margin_circle, configuration):
     kernel = np.ones((10, 10), np.uint8)
 
     # We apply a morphological filter to reduce noise in the image
@@ -255,7 +254,7 @@ def identify_groups(path, img, margin_circle):
     contours, hierarchy = cv2.findContours(closed_image, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
     image_with_rectangles = img.copy()
     for cnt in contours:
-        if constants.min_contour_area < cv2.contourArea(cnt):  # So we discard rectangles with less than five pixels of area. This reduces noise.
+        if configuration.min_contour_area < cv2.contourArea(cnt):  # So we discard rectangles with less than five pixels of area. This reduces noise.
             closest_rect = cv2.minAreaRect(cnt)  # (center(x, y), (width, height), angle of rotation)
             bounding_rect = cv2.boundingRect(cnt)  # (horizontal, vertical, width, height)
             box = cv2.boxPoints(closest_rect)  # (bottom left x and y, and then counterclockwise)
@@ -279,27 +278,31 @@ def check_if_box_is_in_mask(box, margin_circle):
     return np.count_nonzero(masked_circle)
 
 
-def process_path(path, initial_images, recursive = True):
+def process_path(path, initial_images, configuration, recursive = True):
     images = initial_images
     if os.path.isfile(path) is True:
         if util.is_image_path(path) and "_modified.jpg" not in path:
-            image_object = readimage(path)
+            image_object = readimage(path, configuration)
             images.append(image_object)
     if os.path.isdir(path) is True:
         file_list = os.listdir(path)
-        constants.open_toml_string(path)
+        configuration = Configuration.read_config_file(path)
         for file_name in file_list:
             new_path = path + "/" + file_name
             if os.path.isfile(new_path) or (os.path.isdir(new_path) and recursive is True):
-                process_path(new_path, images)
+                process_path(new_path, images, configuration)
     util.logger.log(logging.INFO, "Images processed {images}".format(images=len(images)))
     return images
 
 
-def readimage(path):
+def readimage(path, configuration):
     util.logger.log(logging.DEBUG, "Analyzing image at {path}".format(path=path))
     img = cv2.imread(path, cv2.IMREAD_COLOR)
     image_object = Image(path, img)
+    if configuration is None:
+        image_object.configuration = Configuration()
+    else:
+        image_object.configuration = configuration
     measurements = circles(image_object, path)
     if measurements > 0:
         util.logger.log(logging.INFO, path + " has measurements!")
@@ -315,7 +318,7 @@ def readimage(path):
 
 
 def start(path, output_file, recursive = False, split_files = False, terminal = False, headers = False):
-    util.logger.log(logging.DEBUG, "Recursive processing is " + recursive.__str__())
+    util.logger.log(logging.INFO, "Recursive processing is " + recursive.__str__())
     i = 0
     output_string = "Processed images at path " + path + "\n\n"
     images = process_path(path, [], recursive)
@@ -326,13 +329,13 @@ def start(path, output_file, recursive = False, split_files = False, terminal = 
     if output_file is not None:
         with open(output_file, "w") as f:
             f.write(output_string)
-            print("File " + output_file + " succesfully written.")
+            util.logger.log(logging.INFO, "File " + output_file + " succesfully written.")
     if split_files is True:
         for image in images:
             path = image.path+"_output.csv"
             with open(path, "w") as f:
                 f.write(image.get_description(False, headers = headers))
-                print("File " + path.__str__() + " succesfully written.")
+                util.logger.log(logging.INFO, "File " + path.__str__() + " succesfully written.")
     if terminal is True:
         print(output_string)
 

@@ -5,16 +5,15 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Python: Archivo actual",
-            "type": "python",
+            "name": "Python Debugger: Current File with Arguments",
+            "type": "debugpy",
             "request": "launch",
-            "program": "python",
+            "program": "${file}",
+            "console": "integratedTerminal",
             "args": [
-                "${workspaceFolderBasename}/main.py",
                 "-i",
-                 "./images"
-            ],
-            "console": "integratedTerminal"
+                "/Users/manumateos/Developer/Sunburst/sunburst/images"
+            ]
         }
     ]
 }
