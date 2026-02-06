@@ -179,7 +179,7 @@ def mark_detected_circle(output, r, x, y):
 
 
 def crop_image(img, center_x, center_y, r, configuration):
-    circle_outer_margin = configuration.circle_outer_margin
+    circle_outer_margin = configuration["constants"]["circle_outer_margin"]                                       
     crop_img = img[center_y - r - circle_outer_margin:center_y + r + circle_outer_margin, center_x - r - circle_outer_margin:center_x + r + circle_outer_margin]
     height, width, channels = crop_img.shape
 
@@ -192,7 +192,7 @@ def crop_image(img, center_x, center_y, r, configuration):
 
 
 def get_exterior_circle(img, center_x, center_y, r, configuration, width=1):
-    exterior_r = r + configuration.error_margin  # Exterior circle, to detect measurements /this should be adjusted later.
+    exterior_r = r + configuration["constants"]["error_margin"]  # Exterior circle, to detect measurements /this should be adjusted later.
     # This is NOT the circle being drawn: this is only used to detect measurements.
     output = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)  # type: mat
 
@@ -212,8 +212,8 @@ def get_error_margin_circle(img, center_x, center_y, r, configuration):
     # We're going for 10 pixels outside and inside the detected circle.
     # It's needed to add a _inside_ circle because sometimes there are some difference between the
     #     detected circle and the "actual" one, this way we try not to lose any measurements.
-
-    output_image = get_exterior_circle(img, center_x, center_y, r, configuration, 2 * configuration.error_margin)
+    error_margin = configuration["constants"]["error_margin"]
+    output_image = get_exterior_circle(img, center_x, center_y, r, configuration, 2 * error_margin)
 
     return output_image
 
@@ -223,12 +223,14 @@ def get_red_ink(img, configuration):
 
     # Red HSV values has limit values for H: both 0 and 180 means "pure red". We apply two masks to keep into
     # account both kinds of red: the more "orangey" and the more "purpley".
-    lower_red = np.array(configuration.ink_color_first[0])
-    upper_red = np.array(configuration.ink_color_first[1])
+    ink_color_first = eval(configuration["colors"]["ink_color_first"])
+    ink_color_second = eval(configuration["colors"]["ink_color_second"])
+    lower_red = np.array(ink_color_first[0])
+    upper_red = np.array(ink_color_first[1])
     mask0 = cv2.inRange(input, lower_red, upper_red)
 
-    lower_red = np.array(configuration.ink_color_second[0])
-    upper_red = np.array(configuration.ink_color_second[1])
+    lower_red = np.array(ink_color_second[0])
+    upper_red = np.array(ink_color_second[1])
     mask1 = cv2.inRange(input, lower_red, upper_red)
 
     # We join both masks.
@@ -254,7 +256,7 @@ def identify_groups(path, img, margin_circle, configuration):
     contours, hierarchy = cv2.findContours(closed_image, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
     image_with_rectangles = img.copy()
     for cnt in contours:
-        if configuration.min_contour_area < cv2.contourArea(cnt):  # So we discard rectangles with less than five pixels of area. This reduces noise.
+        if configuration["constants"]["min_contour_area"] < cv2.contourArea(cnt):  # So we discard rectangles with less than five pixels of area. This reduces noise.
             closest_rect = cv2.minAreaRect(cnt)  # (center(x, y), (width, height), angle of rotation)
             bounding_rect = cv2.boundingRect(cnt)  # (horizontal, vertical, width, height)
             box = cv2.boxPoints(closest_rect)  # (bottom left x and y, and then counterclockwise)
@@ -286,7 +288,9 @@ def process_path(path, initial_images, configuration, recursive = True):
             images.append(image_object)
     if os.path.isdir(path) is True:
         file_list = os.listdir(path)
-        configuration = Configuration.read_config_file(path)
+        new_configuration = Configuration.read_config_file(path)
+        if new_configuration is not None and new_configuration != {}:
+            configuration = new_configuration
         for file_name in file_list:
             new_path = path + "/" + file_name
             if os.path.isfile(new_path) or (os.path.isdir(new_path) and recursive is True):
