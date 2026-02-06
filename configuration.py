@@ -33,13 +33,17 @@ class Configuration(object):
         
         if config_data:
             self.is_default = False
-            self.error_margin = config_data.get('error_margin', self.error_margin)
-            self.circle_outer_margin = config_data.get('circle_outer_margin', self.circle_outer_margin)
-            self.min_contour_area = config_data.get('min_contour_area', self.min_contour_area)
-            self.backgroundColorUpperRange = tuple(map(tuple, config_data.get('backgroundColorUpperRange', self.backgroundColorUpperRange)))
-            self.circleColorUpperRange = tuple(map(tuple, config_data.get('circleColorUpperRange', self.circleColorUpperRange)))
-            self.ink_color_first = tuple(map(tuple, config_data.get('ink_color_first', self.ink_color_first)))
-            self.ink_color_second = tuple(map(tuple, config_data.get('ink_color_second', self.ink_color_second)))
+            color_config = config_data.get('colors', {})
+            constants_config = config_data.get('constants', {})
+
+            self.error_margin = constants_config.get('error_margin', self.error_margin)
+            self.circle_outer_margin = constants_config.get('circle_outer_margin', self.circle_outer_margin)
+            self.min_contour_area = constants_config.get('min_contour_area', self.min_contour_area)
+
+            self.backgroundColorUpperRange = eval(color_config.get('backgroundColorUpperRange', self.backgroundColorUpperRange))
+            self.circleColorUpperRange = eval(color_config.get('circleColorUpperRange', self.circleColorUpperRange))
+            self.ink_color_first = eval(color_config.get('ink_color_first', self.ink_color_first))
+            self.ink_color_second = eval(color_config.get('ink_color_second', self.ink_color_second))
         
 
     def read_config_file(self, directory):
