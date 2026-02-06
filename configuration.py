@@ -16,7 +16,8 @@ class Configuration(object):
     # Default configuration.
     ## RGB Colours
     backgroundColorUpperRange = ((230, 230, 230), (255, 255, 255))
-    circleColorUpperRange = ((0, 0, 0),(10, 10, 10))
+    circleColorRangeFirst = ((0, 0, 0),(10, 10, 10))
+    circleColorRangeSecond = ((0, 0, 0),(10, 10, 10))
     ink_color_first = ((0, 130, 130), (20, 255, 255))
     ink_color_second = ((160, 130, 130), (180, 255, 255))
 
@@ -25,7 +26,8 @@ class Configuration(object):
         self.circle_outer_margin = 30
         self.min_contour_area = 5
         self.backgroundColorUpperRange = ((230, 230, 230), (255, 255, 255))
-        self.circleColorUpperRange = ((0, 0, 0),(10, 10, 10))
+        self.circleColorRangeFirst = ((0, 0, 0),(10, 10, 10))
+        self.circleColorRangeSecond = ((0, 0, 0),(10, 10, 10))
         self.ink_color_first = ((0, 130, 130), (20, 255, 255))
         self.ink_color_second = ((160, 130, 130), (180, 255, 255))
         
@@ -40,8 +42,9 @@ class Configuration(object):
             self.circle_outer_margin = constants_config.get('circle_outer_margin', self.circle_outer_margin)
             self.min_contour_area = constants_config.get('min_contour_area', self.min_contour_area)
 
-            self.backgroundColorUpperRange = eval(color_config.get('backgroundColorUpperRange', self.backgroundColorUpperRange))
-            self.circleColorUpperRange = eval(color_config.get('circleColorUpperRange', self.circleColorUpperRange))
+            self.backgroundColorUpperRange = eval(color_config.get('background_color_upper_range', self.backgroundColorUpperRange))
+            self.circleColorRangeFirst = eval(color_config.get('circle_color_range_first', self.circleColorRangeFirst))
+            self.circleColorRangeSecond = eval(color_config.get('circle_color_range_second', self.circleColorRangeSecond))
             self.ink_color_first = eval(color_config.get('ink_color_first', self.ink_color_first))
             self.ink_color_second = eval(color_config.get('ink_color_second', self.ink_color_second))
         

@@ -112,12 +112,13 @@ def circles(image_object, path=""):
     img = image_object.img
     if isinstance(img, (np.ndarray, np.generic)):
 
+        circle_image = umbralize_between_ranges(img, image_object.configuration, image_object.configuration.circleColorRangeFirst, image_object.configuration.circleColorRangeSecond)
+        util.show_image(circle_image)
         output = img.copy()
-        gray = grayscale_image(img)
 
         util.logger.log(logging.DEBUG, "Detecting circles")
         # detect circles in the image
-        circles = cv2.HoughCircles(gray, cv2.HOUGH_GRADIENT, 1.505, 100, param1=400, param2=150)
+        circles = cv2.HoughCircles(circle_image, cv2.HOUGH_GRADIENT, 1.505, 100, param1=400, param2=150)
 
         # ensure at least some circles were found
         if circles is not None:
@@ -140,7 +141,7 @@ def circles(image_object, path=""):
                 # Margin circles, used to discard measurements that are not immediately around the circle.
                 margin_circle = get_error_margin_circle(cropped_img, int_center_x, int_center_y, radius, configuration=image_object.configuration)
                 # Red ink: color-wise masking
-                red_ink = get_red_ink(cropped_img, configuration=image_object.configuration)
+                red_ink = umbralize_between_ranges(cropped_img, image_object.configuration, image_object.configuration.ink_color_first, image_object.configuration.ink_color_second)
                 # And now we just mask the exterior_circle image and the red_ink one, to know if that image has
                 #     measurements.
                 masked_mask = cv2.bitwise_and(margin_circle, red_ink)
@@ -218,23 +219,27 @@ def get_error_margin_circle(img, center_x, center_y, r, configuration):
     return output_image
 
 
-def get_red_ink(img, configuration):
+def umbralize_between_ranges(img, configuration, ink_color_first, ink_color_second = None):
     input = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
 
+    # Two masks are provided to detect the red color, because of the particularity of the HSV representation of red.
     # Red HSV values has limit values for H: both 0 and 180 means "pure red". We apply two masks to keep into
     # account both kinds of red: the more "orangey" and the more "purpley".
-    ink_color_first = configuration.ink_color_first
-    ink_color_second = configuration.ink_color_second
+    # For colors different than red we could get away with only one mask. 
     lower_red = np.array(ink_color_first[0])
     upper_red = np.array(ink_color_first[1])
     mask0 = cv2.inRange(input, lower_red, upper_red)
 
-    lower_red = np.array(ink_color_second[0])
-    upper_red = np.array(ink_color_second[1])
-    mask1 = cv2.inRange(input, lower_red, upper_red)
+    if ink_color_second is not None:
+        lower_red = np.array(ink_color_second[0])
+        upper_red = np.array(ink_color_second[1])
+        mask1 = cv2.inRange(input, lower_red, upper_red)
 
-    # We join both masks.
-    mask = mask0 + mask1
+    if ink_color_second is not None:
+        # We join both masks.
+        mask = mask0 + mask1
+    else:
+        mask = mask0
 
     # Output image will be zero (black) for every pixel except the masked ones (the red-ish ones).
     output = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)

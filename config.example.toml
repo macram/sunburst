@@ -1,6 +1,7 @@
 [colors]
 backgroundColorUpperRange = "{0: (230, 230, 230), 1: (255, 255, 255)}"
-circleColorUpperRange = "{0: (0, 0, 0), 1: (10, 10, 10)}"
+circle_color_range_first = "{0: (0, 0, 0), 1: (10, 10, 10)}"
+circle_color_range_second = "{0: (0, 0, 0), 1: (10, 10, 10)}"
 ink_color_first = "{0: (0, 130, 130), 1: (20, 255, 255)}"
 ink_color_second = "{0: (160, 130, 130), 1: (180, 255, 255)}"
 
